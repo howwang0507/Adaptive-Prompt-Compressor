@@ -1,0 +1,12 @@
+# Documentation binaries
+*.docx
+*.pdf
+~$*.docx
+
+# Python environment
+venv/
+__pycache__/
+*.pyc
+
+# Local data
+*.csv
