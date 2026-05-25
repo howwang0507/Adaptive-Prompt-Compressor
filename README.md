@@ -1,32 +1,40 @@
 # Adaptive Prompt Compression via LinUCB 🧠
 
-## 研究動機 (Motivation)
-隨著大型語言模型 (LLM) 的普及，API 呼叫成本與 Token 數量的限制成為實務應用上的挑戰。不同類型的文本（如程式碼、日常對話）對壓縮的容忍度不同。本專案旨在開發一種能夠根據文本特徵自動選擇最佳壓縮策略的系統，以在保證回答品質的同時，最大化減少 API 使用成本。
+[![Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://adaptive-prompt-compressor.streamlit.app/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![GitHub Stars](https://img.shields.io/github/stars/howwang0507/Adaptive-Prompt-Compressor?style=social)](https://github.com/howwang0507/Adaptive-Prompt-Compressor/stargazers)
 
-## 系統架構 (Architecture)
-本專案採用 **Contextual Bandit (LinUCB)** 演算法進行動態策略選擇。系統定義了三種壓縮策略 (Arms)：
-- **Arm 0**: 原文發送 (高品質、高成本，適用於對結構敏感的文本如程式碼)
-- **Arm 1**: 基本去空白 (低風險壓縮，移除多餘空格與換行)
-- **Arm 2**: 激進去停用詞 (高風險、高壓縮比，移除停用詞但保留標點以維持語義)
+> **"Stop wasting tokens. Optimize your LLM costs with intelligent, adaptive prompt engineering."**
 
-系統會即時提取輸入文本的特徵（長度、詞彙多樣性、代碼特徵等），並透過 LinUCB 演算法預測各策略的回報率，選擇最適合的壓縮方式。
+## 🌟 為什麼選擇這個專案？ (Why This Project?)
+在 LLM 應用中，**Token = 金錢**。傳統的壓縮方法往往「一刀切」，容易導致程式碼邏輯出錯或語義丟失。
+本專案透過 **強化學習 (Contextual Bandit)**，讓 AI 學會：
+1. **省錢**：在不影響品質的前提下，自動過濾無效資訊。
+2. **保真**：識別敏感內容（如 Code），自動切換至「不壓縮」模式以確保執行正確。
+3. **自進化**：隨著使用次數增加，壓縮策略會越來越精準。
 
-## 快速啟動 (Quick Start)
-請確保您的環境中已安裝 Python。
+---
 
-1. **複製專案：** (如果是從 GitHub clone)
-   ```bash
-   git clone <你的_github_repo_url>
-   cd Adaptive-Prompt-Compressor
-   ```
+## 🏗️ 系統架構 (Architecture)
 
-2. **取得 Google Gemini API Key：** 您需要一組 Gemini API Key 來執行實驗。
+```mermaid
+graph TD
+    A[Input Prompt] --> B{Feature Extractor}
+    B -->|Length/Codeness/Entropy| C[LinUCB Agent]
+    C -->|Select Action| D{Compression Arms}
+    D -->|Arm 0| E[Raw Prompt]
+    D -->|Arm 1| F[Basic Strip]
+    D -->|Arm 2| G[Aggressive Stopword Removal]
+    E & F & G --> H[LLM - Gemini 1.5 Flash]
+    H --> I[Reward Calculation]
+    I -->|Cost Saving + Accuracy| C
+```
 
-3. **一鍵啟動：**
-   ```bash
-   ./run.sh
-   ```
-   (若權限不足，請先執行 `chmod +x run.sh`)
+---
+
+## 🚀 快速啟動 (Quick Start)
+*(此處保留原有的啟動指令)*
 
 4. **開始實驗：** 程式啟動後，會在瀏覽器中開啟 Streamlit 介面。請在側邊欄輸入您的 API Key 並開始實驗。
 
