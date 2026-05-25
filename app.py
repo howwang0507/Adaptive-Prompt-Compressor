@@ -65,67 +65,68 @@ def run_experiment(dataset, mode, agent, env):
     return logs
 
 # ==========================================
-# 🌐 UI 介面
+# 🌐 UI Interface
 # ==========================================
-st.title("🧠 基於 Contextual Bandit 之自適應 Prompt 壓縮系統")
-st.markdown("### Adaptive Prompt Compression via LinUCB: Balancing Cost and Quality")
+st.title("🧠 Adaptive Prompt Compression System")
+st.markdown("### Powered by LinUCB Contextual Bandits")
 
-with st.expander("📖 研究背景與方法論 (Methodology)", expanded=False):
+with st.expander("📖 Methodology & Background", expanded=False):
     st.write("""
-    **核心創新：自適應路由 (Adaptive Routing)**
-    本研究不使用固定的壓縮規則，而是透過 **Contextual Bandit (LinUCB)** 演算法動態選擇最佳的壓縮策略。
+    **Core Innovation: Adaptive Routing**
+    This system dynamically selects the optimal compression strategy based on input features using the **LinUCB** algorithm.
     
-    - **Arm 0 (Raw)**: 原文發送。
-    - **Arm 1 (Basic)**: 移除多餘空格。
-    - **Arm 2 (Aggressive)**: 移除停用詞。
+    - **Arm 0 (Raw)**: Original text (Maximum quality).
+    - **Arm 1 (Basic)**: Strip whitespaces (Low risk).
+    - **Arm 2 (Aggressive)**: Stopword removal (High compression).
     """)
 
 if "df_logs" not in st.session_state: st.session_state.df_logs = pd.DataFrame()
 
 with st.sidebar:
-    st.header("⚙️ 實驗參數設定")
-    env_mode = st.radio("環境模式", ["離線模擬 (Simulation)", "真實 API (Real API)"])
+    st.header("⚙️ Experiment Settings")
+    env_mode = st.radio("Environment Mode", ["Offline Simulation", "Real API (Gemini)"])
     
     api_key = ""
-    if env_mode == "真實 API (Real API)":
+    if env_mode == "Real API (Gemini)":
         api_key = st.text_input("Gemini API Key", type="password")
-        st.warning("注意：免費版 API 有 15 RPM 限制。")
+        st.warning("Note: Free-tier has strict RPM limits.")
     
     st.markdown("---")
-    st.subheader("🛠️ 數據源設定")
-    data_source = st.radio("選擇數據來源", ["內建資料集", "自定義輸入 Prompt"])
+    st.subheader("🛠️ Data Source")
+    data_source = st.radio("Choose Source", ["Built-in Dataset", "Custom Prompt"])
     
     custom_prompt = ""
-    if data_source == "自定義輸入 Prompt":
-        custom_prompt = st.text_area("輸入自定義文本", height=150)
+    if data_source == "Custom Prompt":
+        custom_prompt = st.text_area("Input Custom Text", height=150)
     
-    st.subheader("🧪 實驗模式選擇")
-    selected_modes = st.multiselect("選擇要執行的模式", ["Baseline", "Rule_Based", "LinUCB"], default=["LinUCB"])
+    st.subheader("🧪 Mode Selection")
+    selected_modes = st.multiselect("Select Modes to Run", ["Baseline", "Rule_Based", "LinUCB"], default=["LinUCB"])
     
-    if st.button("🚀 開始實驗演示", use_container_width=True, type="primary"):
-        if env_mode == "真實 API (Real API)" and not api_key:
-            st.error("請輸入 API Key！")
+    if st.button("🚀 Start Experiment", use_container_width=True, type="primary"):
+        if env_mode == "Real API (Gemini)" and not api_key:
+            st.error("Please enter your API Key!")
         else:
             all_logs = []
-            env = RealLLMEnvironment(api_key) if env_mode == "真實 API (Real API)" else SimulatedEnvironment()
+            env = RealLLMEnvironment(api_key) if env_mode == "Real API (Gemini)" else SimulatedEnvironment()
             
-            if data_source == "自定義輸入 Prompt" and custom_prompt:
+            if data_source == "Custom Prompt" and custom_prompt:
                 test_data = [{"text": custom_prompt, "category": "Custom"}] * 50
             else:
                 test_data = get_test_dataset(REAL_DATA, 50)
             
-            with st.spinner(f"🤖 正在執行 {len(test_data) * len(selected_modes)} 步實驗..."):
+            with st.spinner(f"🤖 Running {len(test_data) * len(selected_modes)} steps..."):
                 for mode in selected_modes:
                     agent = LinUCB(alpha=1.0) if mode == "LinUCB" else None
                     all_logs.extend(run_experiment(test_data, mode, agent, env))
                 st.session_state.df_logs = pd.DataFrame(all_logs)
-            st.success("實驗完成！")
+            st.success("Experiment Completed!")
 
 if not st.session_state.df_logs.empty:
     df = st.session_state.df_logs
-    tab1, tab2, tab3 = st.tabs(["📊 效能分析", "🧠 決策熱圖", "📄 完整日誌"])
+    tab1, tab2, tab3 = st.tabs(["📊 Performance", "🧠 Decision Map", "📄 Full Logs"])
     
     with tab1:
+        st.markdown("#### Experiment Metrics")
         exp_table = df.groupby("mode").agg(
             Reward=("reward", "mean"),
             Saving=("saving_ratio", lambda x: f"{x.mean()*100:.1f}%"),
@@ -139,6 +140,7 @@ if not st.session_state.df_logs.empty:
         st.altair_chart(reward_chart, use_container_width=True)
 
     with tab2:
+        st.markdown("#### Strategy Distribution (LinUCB)")
         pivot_df = df[df["mode"]=="LinUCB"].groupby(["category", "arm"]).size().reset_index(name='counts')
         pivot_df['Selection Rate (%)'] = pivot_df.groupby('category')['counts'].transform(lambda x: (x / x.sum() * 100))
         selection_chart = alt.Chart(pivot_df).mark_bar().encode(
