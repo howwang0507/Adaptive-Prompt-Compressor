@@ -105,3 +105,11 @@ The current "Semantic Validity" metric is binary. Future work will integrate **B
 
 ## 7. Conclusion
 This paper validates that Contextual Bandits are a viable solution for adaptive prompt management, optimizing the cost-quality frontier where static methods fail.
+
+## References
+1. **Li, L., Chu, W., Langford, J., & Schapire, R. E. (2010).** A contextual-bandit approach to personalized news article recommendation. *Proceedings of the 19th international conference on World wide web*, 661-670.
+2. **Jiang, Hui et al. (2023).** LLMLingua: Compressing Prompts for Accelerated Inference of Large Language Models. *arXiv preprint arXiv:2310.05731*.
+3. **Li, Y. (2023).** Selective Context: Condensing Contexts for Efficient LLM Inference. *arXiv preprint arXiv:2310.06201*.
+4. **Zhang, S., et al. (2024).** Adaptive Routing in Large Language Model Cascades. *Transactions on Machine Learning Research*.
+5. **Reimers, N., & Gurevych, I. (2019).** Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks. *EMNLP-IJCNLP 2019*.
+6. **Vaswani, A., et al. (2017).** Attention is all you need. *Advances in neural information processing systems*, 30.
