@@ -6,6 +6,10 @@
 
 > **"Optimizing LLM efficiency where every token and every request counts. Learning adaptive strategies under extreme resource constraints."**
 
+## 📺 Live Demo
+![Project Demo](assets/demo.gif)
+*Check out the interactive dashboard: [adaptive-prompt-compressor.streamlit.app](https://adaptive-prompt-compreappr-wanghao.streamlit.app)*
+
 ## 📖 Abstract
 Large Language Models (LLMs) incur significant operational costs and latency due to token-based pricing. While static prompt compression methods exist, they often fail to adapt to the semantic sensitivity of diverse tasks. 
 
