@@ -78,7 +78,7 @@ To further understand the agent's behavior, we analyze the metrics across differ
 The data confirms that the agent successfully learns a **conservative policy for sensitive data** (Code) while maximizing **economic efficiency for redundant data** (Chat).
 
 ### 5.3 Cost-Quality Trade-off
-![Pareto Frontier](assets/figure_3_pareto.png)  
+![Pareto Frontier](assets/figure_3_pareto.svg)  
 *Figure 1: Cost-Quality Trade-off (X: Token Saving, Y: Success Rate). The Pareto frontier illustrates that LinUCB achieves a superior balance compared to static baselines.*
 
 ### 5.4 Learning Convergence
