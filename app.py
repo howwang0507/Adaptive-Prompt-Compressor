@@ -277,13 +277,19 @@ with st.sidebar:
     3. **策略可視化**: 觀察 AI 如何針對不同類型文本切換 Arm。
     """)
     
+    st.markdown("---")
+    st.subheader("🧪 實驗模式選擇")
+    selected_modes = st.multiselect("選擇要執行的模式", ["Baseline", "Rule_Based", "LinUCB"], default=["LinUCB"])
+    st.caption("提示：配額有限時，建議一次只勾選一個模式執行。")
+
     if st.button("🚀 開始實驗演示", use_container_width=True, type="primary"):
         if not api_key:
             st.error("請輸入 API Key！")
+        elif not selected_modes:
+            st.warning("請至少選擇一個模式！")
         else:
             all_logs = []
             env = RealLLMEnvironment(api_key=api_key)
-            modes = ["Baseline", "Rule_Based", "LinUCB"] 
             
             # 準備數據
             if data_source == "自定義輸入 Prompt" and custom_prompt:
@@ -291,8 +297,8 @@ with st.sidebar:
             else:
                 current_test_data = get_test_dataset(50)
             
-            with st.spinner(f"🤖 正在執行 {len(current_test_data)} 步實驗..."):
-                for mode in modes:
+            with st.spinner(f"🤖 正在執行 {len(current_test_data) * len(selected_modes)} 步實驗..."):
+                for mode in selected_modes:
                     agent = LinUCB(alpha=1.0) if mode == "LinUCB" else None
                     all_logs.extend(run_experiment(current_test_data, mode, agent, env))
                 st.session_state.df_logs = pd.DataFrame(all_logs)
@@ -341,3 +347,4 @@ if not st.session_state.df_logs.empty:
 
     with tab3:
         st.dataframe(df[['step', 'mode', 'category', 'arm', 'reward', 'valid', 'llm_response']], use_container_width=True)
+e)
