@@ -77,17 +77,21 @@ To further understand the agent's behavior, we analyze the metrics across differ
 
 The data confirms that the agent successfully learns a **conservative policy for sensitive data** (Code) while maximizing **economic efficiency for redundant data** (Chat).
 
-### 5.3 Cost-Quality Pareto Frontier
-![Pareto Frontier](Figure_3_Pareto_Placeholder)  
-*Figure 3: Cost-Quality Trade-off. The Pareto frontier illustrates that LinUCB achieves a superior balance compared to static baselines, moving closer to the ideal top-right quadrant (High Saving, High Validity).*
+### 5.3 Cost-Quality Trade-off
+![Pareto Frontier](assets/figure_3_pareto.png)  
+*Figure 1: Cost-Quality Trade-off. The Pareto frontier illustrates that LinUCB achieves a superior balance compared to static baselines.*
 
-### 5.4 Hyperparameter Sensitivity: The Role of $\alpha$
+### 5.4 Learning Convergence
+![Convergence Curve](assets/figure_1_convergence.png)  
+*Figure 2: Average Reward Convergence. The LinUCB agent (blue) exhibits a clear upward trend after Step 5.*
+
+### 5.5 Hyperparameter Sensitivity: The Role of $\alpha$
 The exploration parameter $\alpha$ was set to $1.0$. Lower values ($\alpha < 0.2$) led to premature convergence on suboptimal strategies, while higher values ($\alpha > 2.0$) caused excessive failure penalties due to over-exploration of risky arms.
 
-### 5.5 Feature Ablation Study
+### 5.6 Feature Ablation Study
 The "Codeness" feature ($s_{t,3}$) had the highest impact on policy stability. Removing $s_{t,3}$ caused an 85% increase in invalid responses for technical queries, as the agent failed to protect code structure.
 
-### 5.6 Error Analysis: Case Studies
+### 5.7 Error Analysis: Case Studies
 | Category | Original Prompt | Compressed (Arm 2) | Result | Failure Type |
 | :--- | :--- | :--- | :--- | :--- |
 | Code | `if not found: return None` | `found return` | **Fail** | Semantic Negation Lost |
