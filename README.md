@@ -16,22 +16,18 @@
 
 ---
 
-## 🏗️ 系統架構 (Architecture)
+## 📂 專案結構 (Project Structure)
+本專案採用專業的模組化設計，結構如下：
+- `src/`: 核心邏輯
+  - `agent.py`: LinUCB 強化學習代理人實作。
+  - `environment.py`: 真實 API 與離線模擬環境。
+  - `utils.py`: 獎勵函數與資料處理工具。
+- `tests/`: 單元測試案例，確保核心演算法之穩定性。
+- `app.py`: Streamlit 互動式介面。
 
-```mermaid
-graph TD
-    A[Input Prompt] --> B{Feature Extractor}
-    B -->|Length/Codeness/Entropy| C[LinUCB Agent]
-    C -->|Select Action| D{Compression Arms}
-    D -->|Arm 0| E[Raw Prompt]
-    D -->|Arm 1| F[Basic Strip]
-    D -->|Arm 2| G[Aggressive Stopword Removal]
-    E & F & G --> H[LLM - Gemini 1.5 Flash]
-    H --> I[Reward Calculation]
-    I -->|Cost Saving + Accuracy| C
-```
-
----
+## 🧪 品質保證 (Engineering Quality)
+- **單元測試**: 使用 `pytest` 確保 `LinUCB` 與 `Reward` 邏輯正確。
+- **離線模擬**: 內建 `SimulatedEnvironment`，無需 API Key 即可觀察學習曲線。
 
 ## 🚀 快速啟動 (Quick Start)
 *(此處保留原有的啟動指令)*
