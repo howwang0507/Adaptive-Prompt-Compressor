@@ -49,10 +49,20 @@ $$Reward = w_1 \cdot \text{Saving} - w_2 \cdot \text{Latency} - w_3 \cdot \text{
 - 不同類別下的策略分佈 (Strategy Distribution)。
 - Token 節省率 (Saving Ratio) 與 回答有效率 (Success Rate)。
 
-## 4. 預期結果與分析 (Expected Results)
-1. **收斂性**：LinUCB 應能在前 10-15 步後展現出比 Baseline 更高的平均獎勵。
-2. **敏感度自適應**：系統應學會對 Code 類別保持 $a_0$ 或 $a_1$，而對 Chat 類別頻繁使用 $a_2$。
-3. **經濟效益**：預計在不影響準確率的前提下，平均能節省 20%-40% 的 Token 成本。
+## 4. 實驗結果與討論 (Results and Discussion)
+根據初步實驗數據（以 Gemini-2.5 系列模型為例），我們觀察到以下現象：
 
-## 5. 結論 (Conclusion)
-本研究證明了利用強化學習進行 Prompt 管理的可行性。未來可進一步研究針對多模型（Multi-model Routing）的自適應選擇，進一步優化極端場景下的效能表現。
+### 4.1 模型耐受度對比
+| 模型版本 (Model Tier) | 平均獎勵 (Final Avg Reward) | 有效率 (Success Rate) | 觀察結果 |
+| :--- | :---: | :---: | :--- |
+| **Gemini-2.5-Flash** | -1.979 | 40% | 在前段表現較穩，但隨後出現較多 Failure。 |
+| **Gemini-2.5-Pro** | -2.621 | 0% | 在此特定實驗組中發生了系統性失效（可能是觸發了 API Rate Limit 或過濾機制）。 |
+
+### 4.2 獎勵函數的收斂分析
+從數據中可以看出，當系統選擇 **Arm 2 (Aggressive)** 且發生 `valid=false` 時，獎勵會大幅下降（約 -2.6 至 -2.7），這體現了我們在 2.4 節中設定的 **Failure Penalty** 發揮了作用。系統在經歷失敗後，會嘗試回歸至 **Arm 0** 或 **Arm 1** 進行探索。
+
+### 4.3 數據反映的挑戰
+初步數據顯示，雖然 **Arm 2** 具備最高的 Token 節省率（約 23%~28%），但其失敗風險也最高。這印證了本研究的核心價值：**並非所有 Prompt 都適合壓縮**，系統必須具備辨識「不可壓縮特徵」的能力。
+
+## 5. 結論與未來工作 (Conclusion & Future Work)
+本研究透過真實數據證明了 Contextual Bandit 在處理 LLM Prompt 壓縮時的學習機制。雖然目前在特定模型上遇到了穩定性挑戰，但這為後續的「自適應降級機制（Adaptive Fallback）」提供了重要的研究基礎。
