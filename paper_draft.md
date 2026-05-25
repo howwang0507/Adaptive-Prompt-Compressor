@@ -20,10 +20,10 @@ Contextual Bandits have been widely used for news recommendation (Li et al., 201
 ## 3. Methodology
 ### 3.1 Feature Representation
 For each prompt $x_t$, we extract a context vector $s_t \in \mathbb{R}^d$:
-- $s_{t,1}$: Normalized text length.
-- $s_{t,2}$: Lexical diversity (Unique/Total word ratio).
-- $s_{t,3}$: Structural flag (Binary indicator for code blocks/brackets).
-- $s_{t,4}$: Semantic entropy (Approximated via average word length).
+- $s_{t,1}$: Normalized text length (clamped at 1000 characters).
+- $s_{t,2}$: Lexical diversity, calculated as the ratio of unique words to total words to approximate semantic density.
+- $s_{t,3}$: Structural flag, a binary indicator detected via regular expressions for keywords (e.g., `def`, `function`) and structural syntax (e.g., `{`, `:`).
+- $s_{t,4}$: Semantic entropy approximation, derived from the average character length of tokens.
 
 ### 3.2 Action Space (Arms)
 The agent chooses from an action set $\mathcal{A} = \{a_0, a_1, a_2\}$:
@@ -79,7 +79,7 @@ The data confirms that the agent successfully learns a **conservative policy for
 
 ### 5.3 Cost-Quality Trade-off
 ![Pareto Frontier](assets/figure_3_pareto.png)  
-*Figure 1: Cost-Quality Trade-off. The Pareto frontier illustrates that LinUCB achieves a superior balance compared to static baselines.*
+*Figure 1: Cost-Quality Trade-off (X: Token Saving, Y: Success Rate). The Pareto frontier illustrates that LinUCB achieves a superior balance compared to static baselines.*
 
 ### 5.4 Learning Convergence
 ![Convergence Curve](assets/figure_1_convergence.png)  
@@ -99,7 +99,7 @@ The "Codeness" feature ($s_{t,3}$) had the highest impact on policy stability. R
 
 ## 6. Discussion and Limitations
 ### 6.1 Sample Efficiency in Extreme Quotas
-Under a strict limit of 20 requests/day, LinUCB demonstrated significantly faster adaptation than $\epsilon$-Greedy. By Step 18, the agent successfully identified the requirements for "Code" prompts.
+Under a strict limit of 20 requests/day, LinUCB demonstrated significantly faster adaptation than $\epsilon$-Greedy. Our analysis shows that the agent reaches a stable convergence threshold (Success Rate > 85% for Code) within **50 cumulative steps**, demonstrating high sample efficiency for production deployment.
 ### 6.2 Limitations
 The current "Semantic Validity" metric is binary. Future work will integrate **BERTScore** for a continuous fidelity metric.
 
