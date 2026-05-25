@@ -21,11 +21,32 @@ class RealLLMEnvironment:
         self.stop_words = {"a", "an", "the", "and", "or", "but", "is", "are", "of", "to", "in", "for", "with", "on", "at", "by", "this", "that"}
 
     def extract_features(self, text):
-        length, words = len(text), text.split()
-        unique_ratio = len(set(words)) / max(len(words), 1)
-        return [np.clip(length / 1000, 0.0, 1.0), np.clip(unique_ratio, 0.0, 1.0), 
-                1.0 if "def " in text or "{" in text else 0.0, 
-                np.clip(sum(len(w) for w in words) / max(len(words), 1) / 10.0, 0.0, 1.0), 1.0]
+        """
+        Refined Feature Extraction based on Research Paper Section 3.1.
+        Returns a 5-dimensional vector [length, diversity, codeness, entropy, bias].
+        """
+        if not text or len(text.strip()) == 0:
+            return [0.0, 0.0, 0.0, 0.0, 1.0]
+
+        words = text.split()
+        num_words = len(words)
+
+        # 1. Normalized length (clamped at 1000)
+        s_1 = min(len(text) / 1000.0, 1.0)
+
+        # 2. Lexical diversity (Unique/Total)
+        s_2 = len(set(words)) / num_words if num_words > 0 else 0.0
+
+        # 3. Structural flag (Codeness) - Refined Regex
+        code_pattern = re.compile(r'\b(def|function|class|return|import|const|let)\b|[{}:;=]')
+        s_3 = 1.0 if code_pattern.search(text) else 0.0
+
+        # 4. Semantic entropy approximation (Avg word length)
+        avg_word_length = sum(len(w) for w in words) / num_words if num_words > 0 else 0.0
+        s_4 = min(avg_word_length / 20.0, 1.0)
+
+        # 5. Bias term (Constant 1.0 for LinUCB intercept)
+        return [s_1, s_2, s_3, s_4, 1.0]
 
     def compress_prompt(self, text, arm):
         if arm == 0: return text 

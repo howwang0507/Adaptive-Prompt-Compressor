@@ -123,30 +123,33 @@ with st.sidebar:
 
 if not st.session_state.df_logs.empty:
     df = st.session_state.df_logs
-    tab1, tab2, tab3 = st.tabs(["📊 Performance", "🧠 Decision Map", "📄 Full Logs"])
+    tab1, tab2, tab3, tab4 = st.tabs(["📊 Performance", "🧠 Decision Map", "📄 Full Logs", "🔍 Feature Insight"])
     
     with tab1:
-        st.markdown("#### Experiment Metrics")
-        exp_table = df.groupby("mode").agg(
-            Reward=("reward", "mean"),
-            Saving=("saving_ratio", lambda x: f"{x.mean()*100:.1f}%"),
-            Success=("valid", lambda x: f"{x.mean()*100:.1f}%")
-        ).reset_index()
-        st.table(exp_table)
-        
-        reward_chart = alt.Chart(df).mark_line().encode(
-            x='step', y='avg_reward', color='mode'
-        ).properties(height=350).interactive()
-        st.altair_chart(reward_chart, use_container_width=True)
-
+...
     with tab2:
-        st.markdown("#### Strategy Distribution (LinUCB)")
-        pivot_df = df[df["mode"]=="LinUCB"].groupby(["category", "arm"]).size().reset_index(name='counts')
-        pivot_df['Selection Rate (%)'] = pivot_df.groupby('category')['counts'].transform(lambda x: (x / x.sum() * 100))
-        selection_chart = alt.Chart(pivot_df).mark_bar().encode(
-            x='category:N', y='Selection Rate (%):Q', color='arm:N'
-        ).properties(height=350)
-        st.altair_chart(selection_chart, use_container_width=True)
-
+...
     with tab3:
         st.dataframe(df, use_container_width=True)
+
+    with tab4:
+        st.markdown("#### Feature Distribution by Category")
+        # Extract features for one sample per category to visualize
+        env = SimulatedEnvironment()
+        feat_data = []
+        for cat in ["Chat", "Code", "QA", "Summarization", "Translation"]:
+            sample = next((d for d in REAL_DATA if d["category"] == cat), None)
+            if sample:
+                f = env.extract_features(sample["text"])
+                feat_data.append({"Category": cat, "Length": f[0], "Diversity": f[1], "Codeness": f[2], "Entropy": f[3]})
+        
+        feat_df = pd.DataFrame(feat_data).melt(id_vars="Category", var_name="Feature", value_name="Value")
+        
+        feat_chart = alt.Chart(feat_df).mark_bar().encode(
+            x='Feature:N',
+            y='Value:Q',
+            color='Feature:N',
+            column='Category:N'
+        ).properties(width=120, height=200)
+        st.altair_chart(feat_chart)
+        st.write("**Insight**: Notice how **Codeness** is high for 'Code' but 0 for others, helping the LinUCB Agent distinguish sensitive tasks.")
