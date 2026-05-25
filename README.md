@@ -5,14 +5,14 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub Stars](https://img.shields.io/github/stars/howwang0507/Adaptive-Prompt-Compressor?style=social)](https://github.com/howwang0507/Adaptive-Prompt-Compressor/stargazers)
 
-> **"Stop wasting tokens. Optimize your LLM costs with intelligent, adaptive prompt engineering."**
+> **"Optimizing LLM efficiency where every token and every request counts. Learning adaptive strategies under extreme resource constraints."**
 
 ## 🌟 為什麼選擇這個專案？ (Why This Project?)
-在 LLM 應用中，**Token = 金錢**。傳統的壓縮方法往往「一刀切」，容易導致程式碼邏輯出錯或語義丟失。
-本專案透過 **強化學習 (Contextual Bandit)**，讓 AI 學會：
-1. **省錢**：在不影響品質的前提下，自動過濾無效資訊。
-2. **保真**：識別敏感內容（如 Code），自動切換至「不壓縮」模式以確保執行正確。
-3. **自進化**：隨著使用次數增加，壓縮策略會越來越精準。
+本專案專注於解決真實開發環境中的痛點：**API 配額限制與高昂成本**。
+透過 **Contextual Bandit (LinUCB)**，系統不僅在優化 Token，更在挑戰 **極限樣本效率 (Sample Efficiency)**：
+1. **資源受限學習**：專為每日請求數受限（如 Free-tier API）的環境設計。
+2. **精準權衡**：在「成本節省」與「API 穩定性」之間尋找最優解。
+3. **自適應路由**：自動識別高敏感內容（如 Code），防止因壓縮導致的系統崩潰。
 
 ---
 
