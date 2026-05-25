@@ -347,4 +347,3 @@ if not st.session_state.df_logs.empty:
 
     with tab3:
         st.dataframe(df[['step', 'mode', 'category', 'arm', 'reward', 'valid', 'llm_response']], use_container_width=True)
-e)
