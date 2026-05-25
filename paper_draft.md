@@ -46,6 +46,11 @@ Where $\lambda_s=1.5, \lambda_l=0.2, \lambda_f=2.5$. The indicator function $\ma
 ### 3.5 Computational Complexity
 A key advantage of the LinUCB approach over Deep Reinforcement Learning (DRL) methods is its computational efficiency. The per-step complexity of LinUCB is $O(d^2)$ per arm, where $d$ is the number of features. Given our small feature set ($d=5$), the routing overhead is under 1ms, ensuring that the cost-saving benefits of compression are not offset by additional latency.
 
+### 3.6 Feature Interpretability (Explainable AI)
+To ensure the agent's decisions are transparent, we provide a feature distribution analysis across categories.
+![Feature Distribution](assets/figure_4_features.png)  
+*Figure 4: Feature Distribution by Category. The high "Codeness" score for technical snippets allows the LinUCB agent to distinguish sensitive data from general chat, enabling explainable adaptive routing.*
+
 ## 4. Experimental Setup
 ### 4.1 Dataset Description
 We utilize a balanced benchmark consisting of 250 prompts across 5 categories (Chat, Code, QA, Summarization, Translation).
