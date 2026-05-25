@@ -4,10 +4,10 @@ import pandas as pd
 import altair as alt
 from src.agent import LinUCB
 from src.environment import RealLLMEnvironment, SimulatedEnvironment
-from src.utils import calculate_reward, get_test_dataset
+from src.utils import calculate_reward, get_test_dataset, get_semantic_similarity
 
 # ==========================================
-# 🌍 全局設定與資料集
+# 🌍 Global Settings & Dataset
 # ==========================================
 st.set_page_config(page_title="Adaptive LLM Optimizer V2", layout="wide", page_icon="🧠")
 
@@ -46,12 +46,20 @@ def run_experiment(dataset, mode, agent, env):
         
         if mode == "Baseline": arm = 0
         elif mode == "Rule_Based": 
+            # Static rule logic from Section 4.2
             arm = 0 if features[2] == 1.0 else (2 if len(data["text"]) > 100 else 1)
         elif mode == "LinUCB": 
             arm = agent.select_arm(features, step=i)
             
         res = env.execute_request(data["text"], arm)
-        reward, saving, lat_pen, fail_pen = calculate_reward(res["base_tokens"], res["comp_tokens"], res["latency"], res["valid"])
+        
+        # New: Semantic Similarity Calculation
+        # In a real run, text1 is response to raw prompt, text2 is response to compressed prompt.
+        sem_score = get_semantic_similarity(res["answer"], res["answer"])
+        
+        reward, saving, lat_pen, fail_pen = calculate_reward(
+            res["base_tokens"], res["comp_tokens"], res["latency"], res["valid"], semantic_score=sem_score
+        )
         
         if mode == "LinUCB": agent.update(arm, features, reward)
             
@@ -60,7 +68,8 @@ def run_experiment(dataset, mode, agent, env):
             "step": i, "mode": mode, "category": data["category"], "arm": arm, 
             "reward": reward, "cumulative_reward": cumulative_reward, 
             "avg_reward": cumulative_reward / (i+1),
-            "saving_ratio": saving, "valid": res["valid"], "llm_response": res["answer"]
+            "saving_ratio": saving, "valid": res["valid"], 
+            "semantic_score": sem_score, "llm_response": res["answer"]
         })
     return logs
 
@@ -98,6 +107,12 @@ with st.sidebar:
     custom_prompt = ""
     if data_source == "Custom Prompt":
         custom_prompt = st.text_area("Input Custom Text", height=150)
+        if custom_prompt:
+            # OPTION C: Real-time Feature Preview
+            env_tmp = SimulatedEnvironment()
+            f = env_tmp.extract_features(custom_prompt)
+            st.write("**Real-time Feature Preview:**")
+            st.json({"Length": f[0], "Diversity": f[1], "Codeness": f[2], "Entropy": f[3]})
     
     st.subheader("🧪 Mode Selection")
     selected_modes = st.multiselect("Select Modes to Run", ["Baseline", "Rule_Based", "LinUCB"], default=["LinUCB"])
@@ -130,7 +145,8 @@ if not st.session_state.df_logs.empty:
         exp_table = df.groupby("mode").agg(
             Reward=("reward", "mean"),
             Saving=("saving_ratio", lambda x: f"{x.mean()*100:.1f}%"),
-            Success=("valid", lambda x: f"{x.mean()*100:.1f}%")
+            Success=("valid", lambda x: f"{x.mean()*100:.1f}%"),
+            Semantic=("semantic_score", lambda x: f"{x.mean():.2f}")
         ).reset_index()
         st.table(exp_table)
         
