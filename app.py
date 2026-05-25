@@ -203,34 +203,69 @@ with st.expander("📖 研究背景與方法論 (Methodology)", expanded=False):
     $Reward = 1.5 \cdot Saving - 0.2 \cdot Latency - 2.5 \cdot Failure$
     """)
 
-# 實驗資料集 (收斂精簡版 - 30 筆樣本)
+# 實驗資料集 (擴充版 - 涵蓋更多場景)
 REAL_DATA = [
+    # --- Chat Category ---
     {"text": "Could you please explain to me in detail what the weather is usually like in Tokyo during the spring season?", "category": "Chat"},
     {"text": "Tell me about the history of the Eiffel Tower, including when it was built and who designed it.", "category": "Chat"},
+    {"text": "What are some fun things to do in San Francisco for a first-time visitor?", "category": "Chat"},
+    {"text": "Can you give me a list of healthy snacks that are easy to prepare at home?", "category": "Chat"},
+    {"text": "I'm feeling a bit stressed today. Could you suggest some relaxation techniques?", "category": "Chat"},
+    {"text": "What's the best way to learn a new language quickly and effectively?", "category": "Chat"},
+    
+    # --- Code Category ---
     {"text": "def quicksort(arr):\n    if len(arr) <= 1: return arr\n    pivot = arr[len(arr) // 2]\n    left = [x for x in arr if x < pivot]\n    middle = [x for x in arr if x == pivot]\n    right = [x for x in arr if x > pivot]\n    return quicksort(left) + middle + quicksort(right)", "category": "Code"},
     {"text": "Write a Python function to scrape news headlines from a website using BeautifulSoup.", "category": "Code"},
+    {"text": "const factorial = (n) => n === 0 ? 1 : n * factorial(n - 1);", "category": "Code"},
+    {"text": "Explain how a React useEffect hook works with a simple example.", "category": "Code"},
+    {"text": "SELECT name, age FROM users WHERE status = 'active' ORDER BY age DESC LIMIT 10;", "category": "Code"},
+    {"text": "How do I implement a binary search algorithm in Java?", "category": "Code"},
+
+    # --- QA Category ---
     {"text": "Who was the first person to walk on the moon, and what was the name of the mission?", "category": "QA"},
     {"text": "What are the primary causes of climate change, and how do greenhouse gases contribute?", "category": "QA"},
-    {"text": "The Industrial Revolution was a period of global economic transition towards more efficient manufacturing processes. Please summarize this passage in one sentence.", "category": "Summarization"},
-    {"text": "A supernova is a powerful and luminous stellar explosion occurring during the last evolutionary stages of a star. Provide a brief summary.", "category": "Summarization"},
+    {"text": "Who wrote the play 'Romeo and Juliet' and in what century was it written?", "category": "QA"},
+    {"text": "What is the capital of Australia and what are some of its major landmarks?", "category": "QA"},
+    {"text": "How does photosynthesis work in plants at a cellular level?", "category": "QA"},
+    {"text": "What are the main differences between a virus and a bacteria?", "category": "QA"},
+
+    # --- Summarization Category ---
+    {"text": "The Industrial Revolution was a period of global economic transition towards more efficient manufacturing processes. It began in Great Britain and then spread to other parts of the world. Please summarize this passage in one sentence.", "category": "Summarization"},
+    {"text": "A supernova is a powerful and luminous stellar explosion occurring during the last evolutionary stages of a star. It can briefly outshine an entire galaxy. Provide a brief summary.", "category": "Summarization"},
+    {"text": "Quantum mechanics is a fundamental theory in physics that provides a description of the physical properties of nature at the scale of atoms and subatomic particles. Summarize this concept for a non-expert.", "category": "Summarization"},
+    {"text": "The Great Wall of China is a series of fortifications built across the historical northern borders of ancient Chinese states. Summarize its historical significance.", "category": "Summarization"},
+
+    # --- Translation Category ---
     {"text": "Translate the following English sentence into traditional Chinese: 'The quick brown fox jumps over the lazy dog.'", "category": "Translation"},
-    {"text": "How do you say 'Where is the nearest library?' in Spanish, French, and German?", "category": "Translation"}
+    {"text": "How do you say 'Where is the nearest library?' in Spanish, French, and German?", "category": "Translation"},
+    {"text": "Translate 'Artificial Intelligence is changing the world' into Japanese and Korean.", "category": "Translation"},
+    {"text": "What is the Italian translation for 'I would like to order a pizza with extra cheese'?", "category": "Translation"}
 ]
 
-# 每類 6 筆，總計 30 筆
-TEST_DATA = []
-for cat in ["Chat", "Code", "QA", "Summarization", "Translation"]:
-    cat_items = [d for d in REAL_DATA if d["category"] == cat]
-    TEST_DATA.extend(random.choices(cat_items, k=6))
-
-random.seed(42)
-random.shuffle(TEST_DATA)
+# 每類 10 筆，總計 50 筆 (根據現有擴充)
+def get_test_dataset(num_samples=50):
+    dataset = []
+    for cat in ["Chat", "Code", "QA", "Summarization", "Translation"]:
+        cat_items = [d for d in REAL_DATA if d["category"] == cat]
+        dataset.extend(random.choices(cat_items, k=num_samples // 5))
+    random.seed(42)
+    random.shuffle(dataset)
+    return dataset
 
 if "df_logs" not in st.session_state: st.session_state.df_logs = pd.DataFrame()
 
 with st.sidebar:
     st.header("⚙️ 實驗參數設定")
     api_key = st.text_input("Gemini API Key", type="password")
+    
+    st.markdown("---")
+    st.subheader("🛠️ 數據源設定")
+    data_source = st.radio("選擇數據來源", ["內建擴充資料集 (50 筆)", "自定義輸入 Prompt"])
+    
+    custom_prompt = ""
+    if data_source == "自定義輸入 Prompt":
+        custom_prompt = st.text_area("輸入自定義文本 (多行輸入)", height=150, placeholder="在此輸入您想測試的 Prompt...")
+        st.caption("注意：自定義模式會針對該 Prompt 重複執行以觀察學習曲線。")
     
     st.markdown("---")
     st.subheader("💡 演示重點")
@@ -248,10 +283,16 @@ with st.sidebar:
             env = RealLLMEnvironment(api_key=api_key)
             modes = ["Baseline", "Rule_Based", "LinUCB"] 
             
-            with st.spinner("🤖 正在執行線上學習實驗..."):
+            # 準備數據
+            if data_source == "自定義輸入 Prompt" and custom_prompt:
+                current_test_data = [{"text": custom_prompt, "category": "Custom"}] * 20
+            else:
+                current_test_data = get_test_dataset(50)
+            
+            with st.spinner(f"🤖 正在執行 {len(current_test_data)} 步實驗..."):
                 for mode in modes:
                     agent = LinUCB(alpha=1.0) if mode == "LinUCB" else None
-                    all_logs.extend(run_experiment(TEST_DATA, mode, agent, env))
+                    all_logs.extend(run_experiment(current_test_data, mode, agent, env))
                 st.session_state.df_logs = pd.DataFrame(all_logs)
             st.success("實驗完成！")
             
