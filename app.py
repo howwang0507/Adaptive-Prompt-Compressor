@@ -101,26 +101,34 @@ class RealLLMEnvironment:
         answer = ""
         is_valid = True
         
-        try:
-            time.sleep(1.2) # 避開 Rate Limit
-            response = self.model.generate_content(
-                f"Briefly respond to this: {compressed_text}",
-                generation_config={"max_output_tokens": 150}
-            )
+        # 增加重試機制與更長的等待時間以應對免費版 API 限制 (15 RPM)
+        max_retries = 3
+        for attempt in range(max_retries):
             try:
+                # 每個 Request 至少間隔 4.5 秒，確保每分鐘不超過 13-14 次
+                time.sleep(4.5) 
+                response = self.model.generate_content(
+                    f"Briefly respond to this: {compressed_text}",
+                    generation_config={"max_output_tokens": 150}
+                )
                 answer = response.text
-            except ValueError:
-                # 處理可能的內容過濾或空回應
-                answer = "Error: Response was blocked or empty."
+                break # 成功則跳出重試迴圈
+            except Exception as e:
+                if "429" in str(e) and attempt < max_retries - 1:
+                    print(f"[WARNING] Rate Limit Hit. Retrying in 10s... (Attempt {attempt+1})")
+                    time.sleep(10) # 遇到 429 額外多等 10 秒
+                    continue
+                answer = f"API Error: {str(e)}"
                 is_valid = False
-            
-            # 強化驗證：關鍵字 + 長度檢查
+                print(f"[ERROR] API Call Failed: {str(e)}")
+                break
+        
+        if is_valid:
+            # 強化驗證邏輯
             confusion_flags = ["i don't understand", "not sure", "unclear", "clarify", "聽不懂", "不清楚", "error", "blocked"]
             if any(flag in answer.lower() for flag in confusion_flags):
                 is_valid = False
             
-            # 改進長度判定：相容中英文
-            # 判斷標準：如果是中文，字元數 > 3；如果是英文，單字數 >= 2
             has_chinese = any('\u4e00' <= char <= '\u9fff' for char in answer)
             if has_chinese:
                 if len(answer.strip()) < 3: is_valid = False
@@ -129,14 +137,8 @@ class RealLLMEnvironment:
             
             if len(answer.strip()) == 0: is_valid = False
                 
-            # 調試資訊：輸出到終端機以便觀察
-            clean_ans = answer[:50].replace('\n', ' ')
-            print(f"[DEBUG] Model: {self.model_name} | Arm: {arm} | Valid: {is_valid} | Response: {clean_ans}...")
-            
-        except Exception as e:
-            answer = f"API Error: {str(e)}"
-            is_valid = False
-            print(f"[ERROR] API Call Failed: {str(e)}")
+        clean_ans = answer[:50].replace('\n', ' ')
+        print(f"[DEBUG] Arm: {arm} | Valid: {is_valid} | Response: {clean_ans}...")
             
         return {"base_tokens": base_tokens, "comp_tokens": comp_tokens, 
                 "latency": (time.time() - start_time) * 1000, "valid": is_valid, "answer": answer}
