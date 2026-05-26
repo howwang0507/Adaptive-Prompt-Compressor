@@ -7,6 +7,12 @@
 venv/
 __pycache__/
 *.pyc
+.pytest_cache/
 
 # Local data
 *.csv
+results/
+
+# Secrets
+gcp-key.json
+*.env

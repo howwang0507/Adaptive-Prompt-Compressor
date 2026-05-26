@@ -91,20 +91,43 @@ class VertexAIEnvironment(RealLLMEnvironment):
             raise ImportError("google-cloud-aiplatform not installed.")
         os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = key_path
         vertexai.init(project=project_id, location=location)
-        self.model = VertexGenerativeModel("gemini-1.5-flash-001")
+        
+        # System instruction helps the model handle malformed/compressed inputs
+        self.model = VertexGenerativeModel(
+            "gemini-1.5-flash-001",
+            system_instruction="You are a research assistant. Respond concisely to the user's prompt, even if it is highly compressed or missing common stopwords."
+        )
         self.stop_words = {"a", "an", "the", "and", "or", "but", "is", "are", "of", "to", "in", "for", "with", "on", "at", "by", "this", "that"}
 
     def execute_request(self, text, arm):
-        # Vertex AI uses slightly different token counting and generation API
-        # but the wrapper can normalize it.
         compressed_text = self.compress_prompt(text, arm)
         start_time = time.time()
         answer, is_valid = "", True
+        
+        # Max unblocking: BLOCK_NONE for all categories
+        from vertexai.generative_models import HarmCategory, HarmBlockThreshold
+        safety_config = {
+            HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
+            HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
+            HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
+            HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
+        }
+        
         try:
-            response = self.model.generate_content(f"Briefly respond to this: {compressed_text}")
+            # Use a clearer user-message structure
+            response = self.model.generate_content(
+                compressed_text,
+                safety_settings=safety_config,
+                generation_config={"temperature": 0.2, "max_output_tokens": 100}
+            )
             answer = response.text
         except Exception as e:
+            # Handle block cases explicitly
             answer, is_valid = f"Vertex Error: {str(e)}", False
+            
+        # Run validation logic (length check etc.)
+        if is_valid:
+            if len(answer.strip()) < 2: is_valid = False
             
         return {"base_tokens": len(text)//4, "comp_tokens": len(compressed_text)//4, 
                 "latency": (time.time() - start_time) * 1000, "valid": is_valid, "answer": answer}
