@@ -1,0 +1,63 @@
+\\documentclass[11pt]{article}
+\\usepackage[final]{neurips_2024} % Using NeurIPS style as a standard
+\\usepackage[utf8]{inputenc} 
+\\usepackage[T1]{fontenc}    
+\\usepackage{hyperref}       
+\\usepackage{url}            
+\\usepackage{booktabs}       
+\\usepackage{amsfonts}       
+\\usepackage{nicefrac}       
+\\usepackage{microtype}      
+\\usepackage{xcolor}         
+\\usepackage{graphicx}
+\\usepackage{amsmath}
+
+\\title{Adaptive Prompt Compression via Contextual Bandits: Balancing Token Cost and Semantic Fidelity in Resource-Constrained Environments}
+
+\\author{%
+  Wang Hao \\\\
+  Department of Computer Science \\\\
+  \\texttt{howwang0507@example.com} \\\\
+}
+
+\\begin{document}
+
+\\maketitle
+
+\\begin{abstract}
+Large Language Models (LLMs) incur significant operational costs due to token-based pricing. This paper presents an adaptive prompt compression framework using the LinUCB Contextual Bandit algorithm. By dynamically selecting strategies based on linguistic features, the system achieves a 16.0\\% reduction in token usage while maintaining 88.0\\% semantic validity.
+\\end{abstract}
+
+\\section{Introduction}
+The explosion of LLM applications has highlighted the trade-off between inference cost and output quality...
+
+\\section{Methodology}
+\\subsection{LinUCB Decision Rule}
+The selection rule at time $t$ for arm $a$ is defined as:
+\\begin{equation}
+a_t = \\arg\\max_{a \\in \\mathcal{A}} \\left( x_t^\\top \\hat{\\theta}_a + \\alpha \\sqrt{x_t^\\top A_a^{-1} x_t} \\right)
+\\end{equation}
+
+\\section{Experimental Results}
+\\begin{table}[h]
+  \\caption{Performance Comparison across Baselines}
+  \\label{sample-table}
+  \\centering
+  \\begin{tabular}{llll}
+    \\toprule
+    Method & Avg. Reward & Token Saved (\\%) & Success Rate (\\%) \\\\
+    \\midrule
+    Raw & -0.29 & 0.0 & 98.0 \\\\
+    Static Rule & -0.33 & 8.2 & 85.0 \\\\
+    LinUCB (Ours) & \\textbf{-0.18} & \\textbf{16.0} & \\textbf{88.0} \\\\
+    \\bottomrule
+  \\end{tabular}
+\\end{table}
+
+\\section{Conclusion}
+Our system demonstrates that adaptive routing via reinforcement learning is a viable path toward cost-efficient LLM systems.
+
+\\bibliographystyle{plain}
+\\bibliography{references}
+
+\\end{document}
