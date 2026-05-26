@@ -18,7 +18,7 @@ BENCHMARK_DATA = [
     {"text": "How do you say 'Where is the library' in French?", "category": "Translation"},
     {"text": "Summarize the history of the Roman Empire in one paragraph.", "category": "Summarization"},
     {"text": "What's the weather like in New York today?", "category": "Chat"},
-] * 25 # Expand to 125 samples
+] * 300 # Expand to 125 samples
 
 def run_benchmark(api_key=None):
     mode_names = ["Baseline", "Rule_Based", "LinUCB"]
