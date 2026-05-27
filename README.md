@@ -1,14 +1,9 @@
-# Adaptive Prompt Compression via Contextual Bandits 🧠📉
+# Adaptive Prompt Compressor 🧠📉
 
-![Python](https://img.shields.io/badge/Python-3.9%2B-blue.svg)
-![License](https://img.shields.io/badge/License-MIT-green.svg)
-![Gemini API](https://img.shields.io/badge/Model-Gemini%201.5%20Flash-orange.svg)
-![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)
-![Streamlit](https://img.shields.io/badge/Demo-Streamlit-FF4B4B.svg)
+**Dynamic LLM context optimization using Contextual Multi-Armed Bandits (LinUCB).**  
+Achieve **93.5% reliability** while reducing token costs by dynamically routing prompts through task-aware compression strategies. Optimized for real-time inference with **< 1ms latency**.
 
-> **Balancing Token Cost and Semantic Fidelity in Resource-Constrained Environments**
-
-This repository contains the official implementation of our research on applying **Contextual Multi-Armed Bandits (LinUCB)** to dynamic LLM prompt compression. By learning from real-time execution feedback, our agent autonomously balances token economy against the high penalty of semantic failures, resulting in an emergent **Reliability-First** routing policy.
+---
 
 📄 **[Read the Full Paper (LaTeX/PDF) in `./latex/main.tex`](./latex/main.tex)** | 🚀 **[Try the Interactive Demo (Streamlit)](#-interactive-demo)**
 

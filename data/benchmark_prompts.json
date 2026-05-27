@@ -1,0 +1,8 @@
+[
+  {"text": "Summarize the following meeting notes focusing on action items...", "category": "Summarization"},
+  {"text": "Write a Python function to parse a JSON file safely...", "category": "Code"},
+  {"text": "Explain the difference between L1 and L2 regularization in machine learning.", "category": "QA"},
+  {"text": "Translate the following legal contract clause into Traditional Chinese...", "category": "Translation"},
+  {"text": "SELECT a.name, b.order_date FROM users a JOIN orders b ON a.id = b.user_id WHERE b.amount > 100", "category": "Code"},
+  {"text": "How do I bake a chocolate cake without using eggs or dairy?", "category": "Chat"}
+]
