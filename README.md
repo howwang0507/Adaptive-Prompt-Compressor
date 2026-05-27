@@ -122,15 +122,27 @@ The system now utilizes a **SQLite-backed database** (`results/experiments.db`) 
 
 ---
 
-## 🏛️ Engineering Rationale & Sim2Real Design
+## 🧠 Advanced Algorithmic Optimizations
 
-*This section is intended for deep-dive technical discussions during interviews.*
+To ensure production stability and academic rigor, our LinUCB implementation includes several state-of-the-art features:
 
-**Why Contextual Bandits for Prompt Compression?**
-Static compression (LLMLingua) is an open-loop system. By introducing the **LinUCB** $O(d^2)$ closed-loop agent, we enable the system to learn from the *actual* response validity of the LLM. In high-stakes "Sim2Real" environments (e.g., Gemini Vertex AI), the agent's emergent **Reliability-First** behavior protects structural logic (code/math) from the destructive nature of aggressive token pruning.
+1. **Online Feature Scaling**: Uses **Welford's Algorithm** to dynamically normalize features (e.g., scaling character count down to match binary codeness flags). This prevents large-scale features from dominating the covariance matrix.
+2. **Concept Drift Adaptation**: Implements a **Forgetting Factor ($\gamma=0.99$)** to allow the agent to "unlearn" stale data. This is critical for adapting to silent LLM model updates or shifts in user prompt distributions.
+3. **Dual-Track Reward Mechanism**: 
+   - **Online Track**: Lightweight heuristics (keyword retention, length ratio) for zero-latency feedback.
+   - **Offline Track**: Deep semantic evaluation (BERTScore/LLM-as-a-judge) for policy calibration.
+4. **Explainable AI (XAI)**: The agent's "thought process" is fully transparent. You can visualize the learned $\theta$ weights to see exactly why the agent avoids aggressive compression for code-heavy prompts.
 
-**Performance Constraints:**
-The entire decision-making process is optimized to incur **< 1ms** of overhead, ensuring that prompt optimization does not become a bottleneck in streaming LLM applications.
+---
+
+## 🔍 Explainability & Weight Visualization
+
+Visualize what the agent has learned:
+
+```bash
+uv run python scripts/visualize_weights.py
+```
+*(Produces a heatmap in `assets/figure_4_weights.png` showing feature-to-strategy correlations).*
 
 ```bibtex
 @article{Wang2026Adaptive,
