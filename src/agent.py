@@ -46,17 +46,25 @@ class LinUCB:
     Enhanced for Numerical Stability, Thread-Safety, and OOD Protection.
     """
     def __init__(self, n_arms: int, n_features: int, alpha: float = 1.0, 
-                 gamma: float = 0.99, lambda_reg: float = 1.0):
+                 gamma: float = 0.99, lambda_reg: float = 1.0,
+                 domain_priors: Optional[Dict[int, Tuple[np.ndarray, np.ndarray]]] = None):
         self.n_arms: int = n_arms
         self.n_features: int = n_features
         self.alpha: float = alpha
         self.gamma: float = gamma
         
-        # Ridge Regularization: Initialize A = lambda * I
-        self.A_inv: List[np.ndarray] = [np.identity(n_features) / lambda_reg for _ in range(n_arms)]
-        self.b: List[np.ndarray] = [np.zeros((n_features, 1)) for _ in range(n_arms)]
+        # Ridge Regularization or Meta-Learning Warm Start
+        if domain_priors:
+            # Zero-Shot Domain Adaptation: Load pre-trained covariance and reward matrices
+            self.A_inv: List[np.ndarray] = [domain_priors[a][0] for a in range(n_arms)]
+            self.b: List[np.ndarray] = [domain_priors[a][1] for a in range(n_arms)]
+            print("🚀 Meta-Learning: Initialized with Zero-Shot Domain Priors.")
+        else:
+            self.A_inv: List[np.ndarray] = [np.identity(n_features) / lambda_reg for _ in range(n_arms)]
+            self.b: List[np.ndarray] = [np.zeros((n_features, 1)) for _ in range(n_arms)]
         
         # Scaler for online normalization
+
         self.scaler: OnlineScaler = OnlineScaler(n_features)
         
         # Thread safety lock

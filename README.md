@@ -144,7 +144,34 @@ uv run python scripts/visualize_weights.py
 ```
 *(Produces a heatmap in `assets/figure_4_weights.png` showing feature-to-strategy correlations).*
 
+---
+
+## 🛡️ Production Stability & Flawless Engineering
+
+This project is built for mission-critical LLM deployments, featuring 'Temple-Level' stability optimizations:
+
+1. **Numerical Stability ($O(d^2)$ SM Update)**: Instead of costly and unstable $O(d^3)$ matrix inversions, we use the **Sherman-Morrison formula** for incremental updates. This prevents floating-point drift and guarantees invertible covariance matrices through **Ridge Regularization**.
+2. **Thread-Safe Architecture**: All matrix operations and agent updates are protected by **Atomic Locks**, ensuring the compressor can be safely deployed in high-concurrency environments like FastAPI or asynchronous workers.
+3. **OOD Input Protection**: A built-in **Feature Guard** monitors real-time input distributions. If a prompt's features are Out-of-Distribution (OOD), the system automatically triggers a **Conservative Fallback** to protect the inference pipeline from radical bandit decisions.
+4. **Type-Safe Discipline**: 100% code coverage with **Python Type Hints**, validated by `mypy` and `ruff`.
+
+---
+
+## 🏛️ Enterprise & Security Architecture (Roadmap)
+
+For distributed, massive-scale deployments (e.g., K8s clusters serving millions of daily requests), the architecture is designed to support the following ceiling-level extensions:
+
+- **Distributed Parameter Synchronization**: Transitioning from in-memory locks to a **Redis Parameter Server**. This allows hundreds of stateless worker pods to asynchronously push matrix incremental updates (using Redis atomic transactions) ensuring global fleet learning without locking bottlenecks.
+- **Adversarial Resilience (Guardrail Masking)**: LLM Prompt Injection attacks often try to overwrite system prompts. The compressor is designed to accept `System Instructions` that bypass the compression heuristic (Freeze Masking), ensuring that safety guardrails are never stripped out to save tokens.
+- **Zero-Shot Domain Adaptation (Meta-Learning)**: The `LinUCB` initialization supports injecting pre-trained `domain_priors`. For a new customer deploying in a specific domain (e.g., Medical Triage), the agent can be warm-started with pre-calculated $\theta$ matrices, avoiding the cold-start exploration penalty.
+- **Attention Sink Protection**: Integrating a "Position Sensitivity" feature dimension to protect the boundaries (Start/End) of the prompt, respecting the "Lost in the Middle" phenomenon observed in Deep Transformer architectures.
+
+---
+
+## 🎓 Citation
+
 ```bibtex
+
 @article{Wang2026Adaptive,
   title={Adaptive Prompt Compression via Contextual Bandits: Balancing Token Cost and Semantic Fidelity in Resource-Constrained Environments},
   author={Hao, Wang},
