@@ -85,16 +85,32 @@ Adaptive-Prompt-Compressor/
 └── CITATION.cff            # Academic citation metadata
 ```
 
-## 🔌 Framework Integrations
+## ⚡ High-Throughput & Telemetry (Production-Ready)
 
-Easily integrate with popular AI orchestration frameworks:
+Designed for high-performance middleware requirements:
 
-- **LangChain**: Use `AdaptiveCompressionWrapper` as a Runnable in your LCEL chains.
-- **LlamaIndex**: (Coming soon) Data post-processor for query optimization.
+- **Asynchronous Batching**: Built-in `asyncio` support for concurrent prompt processing.
+- **Real-time Telemetry (SSE)**: Stream routing decisions, latency, and rewards to your monitoring dashboard via Server-Sent Events.
+- **Auto-Fallback (Reliability)**: Automatically retries with original prompts if semantic fidelity drops below a defined threshold (default: 0.6).
 
 ```python
-from src.integrations.langchain_wrapper import AdaptiveCompressionWrapper
-chain = AdaptiveCompressionWrapper() | ChatOpenAI()
+from src.async_interface import AsyncLinUCBCompressor
+
+# Initialize async compressor with quality threshold
+compressor = AsyncLinUCBCompressor(fallback_threshold=0.8)
+
+# Parallel batch processing
+results = await compressor.compress_batch([
+    "Prompt 1...", "Prompt 2...", "Prompt 3..."
+])
+```
+
+## 📡 Observability
+
+Monitor your bandit's performance in real-time using our SSE telemetry server:
+
+```bash
+uv run python src/telemetry.py
 ```
 
 ## 🗄️ Persistence & Analytics
