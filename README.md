@@ -29,16 +29,38 @@ This repository contains the official implementation of our research on applying
 | **Code / Technical Logic** | 2.1% | 95.0% | 0.941 | Arm 0 (Conservative) |
 | **Chat / Summarization** | 42.5% | 92.0% | 0.918 | Arm 2 (Aggressive) |
 
-## 🚀 Interactive Demo
+## 🚀 Quick Start (Usage)
 
-We provide a **Streamlit-based dashboard** to visualize the agent's decision-making process in real-time.
+Integrate the adaptive compressor into your Python project in just 3 lines:
 
-### Local Installation (using uv)
+```python
+from src.interface import LinUCBCompressor
+
+# Initialize (defaults to Simulation mode if no key provided)
+compressor = LinUCBCompressor(api_key="your_api_key", model_name="gemini-1.5-flash")
+
+# Compress your prompt
+prompt = "Write a complex Python function to handle thread-safe file operations..."
+compressed_text, strategy, metadata = compressor.compress(prompt)
+
+print(f"Strategy: {strategy} | Compressed: {compressed_text}")
+```
+
+## 🛠️ Setup & Environment
+
+**1. Dependency Management (using uv)**
 ```bash
-# Install uv (fast dependency manager)
+# Install uv
 curl -LsSf https://astral.sh/uv/install.sh | sh
-# Run the demo
-uv run streamlit run src/app.py
+# Sync dependencies
+uv sync
+```
+
+**2. Secret Management**
+Create a `.env` file from the template:
+```bash
+cp .env.example .env
+# Edit .env and add your GEMINI_API_KEY
 ```
 
 ### Run via Docker
