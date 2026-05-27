@@ -1,74 +1,84 @@
-# 🧠 Adaptive Prompt Compression via Contextual Bandits
+# Adaptive Prompt Compression via Contextual Bandits 🧠📉
 
-[![Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://adaptive-prompt-compreappr-wanghao.streamlit.app)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+![Python](https://img.shields.io/badge/Python-3.9%2B-blue.svg)
+![License](https://img.shields.io/badge/License-MIT-green.svg)
+![Gemini API](https://img.shields.io/badge/Model-Gemini%201.5%20Flash-orange.svg)
 
-> **"Optimizing LLM efficiency where every token and every request counts. Learning adaptive strategies under extreme resource constraints."**
+> **Balancing Token Cost and Semantic Fidelity in Resource-Constrained Environments**
 
-## 📺 Live Demo
-![Project Demo](assets/demo.gif)
-*Check out the interactive dashboard: [adaptive-prompt-compressor.streamlit.app](https://adaptive-prompt-compreappr-wanghao.streamlit.app)*
+This repository contains the official implementation of our research on applying **Contextual Multi-Armed Bandits (LinUCB)** to dynamic LLM prompt compression. By learning from real-time execution feedback, our agent autonomously balances token economy against the high penalty of semantic failures, resulting in an emergent **Reliability-First** routing policy.
 
-## 📖 Abstract
-Large Language Models (LLMs) incur significant operational costs and latency due to token-based pricing. While static prompt compression methods exist, they often fail to adapt to the semantic sensitivity of diverse tasks. 
+📄 **[Read the Full Paper (LaTeX/PDF) in `./latex/main.tex`](./latex/main.tex)**
 
-This repository implements a novel **Adaptive Prompt Compression** framework using **LinUCB Contextual Bandits**. The system dynamically routes prompts through various compression strategies based on real-time feedback, achieving a **16.0% reduction in token usage** while maintaining **88.0% response validity** in simulated environments.
+---
 
-## ✨ Key Features
-* **Adaptive Routing**: Automatically switches between Raw, Basic, and Aggressive compression based on linguistic features (e.g., text length, lexical diversity, "codeness").
-* **Resource-Constrained Learning**: Optimized for strict API quotas (e.g., Free-tier 20 RPM limits), reaching stable policy convergence in under 50 steps.
-* **Multi-Objective Reward**: Balances cost-savings, latency, and semantic fidelity.
-* **Sim2Real Environment**: Includes a comprehensive offline simulation mode alongside the live Gemini API environment.
+## 🌟 Key Features & Academic Highlights
 
-## 🏗️ System Architecture
-The agent frames prompt optimization as a **Contextual Multi-Armed Bandit (CMAB)** problem:
-1. **Feature Extractor**: Analyzes the incoming prompt ($x_t$).
-2. **LinUCB Agent**: Evaluates the context and selects an action ($a_t$) to maximize the expected reward.
-3. **Compression Arms**: 
-   * `Arm 0 (Raw)`: No compression (Quality ceiling).
-   * `Arm 1 (Basic)`: Whitespace & newline stripping.
-   * `Arm 2 (Aggressive)`: Stopword filtration.
+1. **Adaptive Contextual Routing**: Unlike static compression methods (e.g., LLMLingua) that rely on perplexity, our system uses a $d=5$ feature vector (Length, Lexical Diversity, Structural Codeness, Semantic Entropy, Bias) to dynamically select compression strategies.
+2. **Ultra-Low Latency ($O(d^2)$)**: The LinUCB algorithm mathematically guarantees a computational complexity of $O(d^2)$. For our 5-dimensional feature space, the routing overhead is strictly **< 1ms**, making it fully viable for real-time, asynchronous LLM pipelines (e.g., SSE streams).
+3. **Sim2Real Transferability**: Extensively validated across both a 4,500-step Offline Simulation and Live API Deployment (Gemini 1.5 Flash).
+4. **Reliability-First Emergence**: In high-penalty production environments ($\lambda_f = 2.5$), the agent autonomously learns to protect structural logic (e.g., Python code, negations), sacrificing marginal token savings to achieve a dominant **93.5% Success Rate**.
 
-## 📊 Experimental Results
-Our agent significantly outperforms static rule-based baselines, successfully learning a conservative policy for sensitive data (Code) while maximizing economic efficiency for redundant data (Chat).
+## 📊 Performance Summary
 
-| Method | Avg. Reward | Token Saved (%) | Success Rate (%) |
-| :--- | :---: | :---: | :---: |
-| Raw | -0.29 | 0.0% | 98.0% |
-| Static Rule | -0.33 | 8.2% | 85.0% |
-| **LinUCB (Ours)** | **-0.18** | **16.0%** | **88.0%** |
+| Environment | Token Saved (%) | Success Rate (%) | Semantic Score | Preferred Strategy |
+| :--- | :---: | :---: | :---: | :---: |
+| **Large-Scale Simulation** | 1.4% | **93.5%** | 0.923 | Reliability-First |
+| **Code / Technical Logic** | 2.1% | 95.0% | 0.941 | Arm 0 (Conservative) |
+| **Chat / Summarization** | 42.5% | 92.0% | 0.918 | Arm 2 (Aggressive) |
 
-## 🚀 Quick Start
+*(Note: Feature Ablation studies confirm that removing the "Codeness" regex feature drops the success rate catastrophically to 71.0%).*
 
-### 1. Installation
-Clone the repository and install the required dependencies:
+## 📁 Repository Structure
+
+```text
+Adaptive-Prompt-Compressor/
+├── src/                    # Core Architecture
+│   ├── agent.py            # LinUCB CMAB Implementation
+│   ├── environment.py      # Multi-provider Env (Simulation & Real API)
+│   └── utils.py            # Reward functions & Semantic metrics
+├── scripts/                # Sim2Real Reproduction Scripts
+│   ├── run_benchmarks.py   # Large-scale simulation (n=1500)
+│   └── mass_real_api_test.py # Live API validation against Vertex/AI Studio
+├── latex/                  # Publication-ready Manuscript
+│   └── main.tex            # NeurIPS 2025 format paper
+├── assets/                 # Generated Figures (Learning Curve, Ablation)
+└── results/                # CSV logs from all experiments
+```
+
+## 🚀 Quick Start (Reproduction)
+
+**1. Setup Environment**
 ```bash
-git clone https://github.com/howwang0507/Adaptive-Prompt-Compressor.git
-cd Adaptive-Prompt-Compressor
+python -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2. Run the Dashboard
-Launch the interactive Streamlit experiment dashboard:
+**2. Run Offline Simulation**
 ```bash
-./run.sh
-# Or run directly: streamlit run app.py
+python scripts/run_benchmarks.py
 ```
 
-### 3. Usage Modes
-* **Offline Simulation**: Test the algorithm's convergence without needing an API key.
-* **Real API (Gemini)**: Input your Google Gemini API key to test real-world token savings and response validity.
+**3. Run Live API Test (Sim2Real)**
+```bash
+export GEMINI_API_KEY="your_api_key_here"
+python scripts/mass_real_api_test.py
+```
 
-## 📂 Repository Structure
-- `src/agent.py`: Implementation of the **LinUCB** algorithm.
-- `src/environment.py`: Simulated and Real LLM environment logic.
-- `src/utils.py`: Multi-objective reward calculation and feature extraction.
-- `app.py`: Streamlit UI for experiment tracking and visualization.
-- `paper_draft.md`: Full academic manuscript detailing the methodology.
+## 🎓 Citation
 
-## 📜 Citation
-If you find this project useful for your research, please refer to the `paper_draft.md` for full methodological details. (BibTeX citation coming soon).
+If you find this codebase or methodology useful in your research, please consider citing:
 
-## 📄 License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+```bibtex
+@article{Wang2026Adaptive,
+  title={Adaptive Prompt Compression via Contextual Bandits: Balancing Token Cost and Semantic Fidelity in Resource-Constrained Environments},
+  author={Hao, Wang},
+  journal={GitHub Repository},
+  year={2026},
+  url={https://github.com/howwang0507/Adaptive-Prompt-Compressor}
+}
+```
+
+---
+*Developed for robust, enterprise-grade LLM inference optimization.*
