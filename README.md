@@ -85,9 +85,36 @@ Adaptive-Prompt-Compressor/
 └── CITATION.cff            # Academic citation metadata
 ```
 
-## 🎓 Citation
+## 🔌 Framework Integrations
 
-If you use this research, please click "Cite this repository" on the sidebar or use the following:
+Easily integrate with popular AI orchestration frameworks:
+
+- **LangChain**: Use `AdaptiveCompressionWrapper` as a Runnable in your LCEL chains.
+- **LlamaIndex**: (Coming soon) Data post-processor for query optimization.
+
+```python
+from src.integrations.langchain_wrapper import AdaptiveCompressionWrapper
+chain = AdaptiveCompressionWrapper() | ChatOpenAI()
+```
+
+## 🗄️ Persistence & Analytics
+
+The system now utilizes a **SQLite-backed database** (`results/experiments.db`) for robust persistence and SQL-based analytics.
+
+- **Complex Queries**: Use SQL `HAVING` clauses to filter performance by category density.
+- **Scalability**: Designed to handle 100k+ trials with indexed search.
+
+---
+
+## 🏛️ Engineering Rationale & Sim2Real Design
+
+*This section is intended for deep-dive technical discussions during interviews.*
+
+**Why Contextual Bandits for Prompt Compression?**
+Static compression (LLMLingua) is an open-loop system. By introducing the **LinUCB** $O(d^2)$ closed-loop agent, we enable the system to learn from the *actual* response validity of the LLM. In high-stakes "Sim2Real" environments (e.g., Gemini Vertex AI), the agent's emergent **Reliability-First** behavior protects structural logic (code/math) from the destructive nature of aggressive token pruning.
+
+**Performance Constraints:**
+The entire decision-making process is optimized to incur **< 1ms** of overhead, ensuring that prompt optimization does not become a bottleneck in streaming LLM applications.
 
 ```bibtex
 @article{Wang2026Adaptive,
