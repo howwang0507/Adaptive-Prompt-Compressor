@@ -1,33 +1,32 @@
-# Interview Presentation: Adaptive Prompt Compression via LinUCB 🚀
+# 🚀 Interview Presentation: Adaptive Prompt Compressor
 
-## Slide 1: Title & Introduction
-- **Project Title**: Adaptive Prompt Compression via Contextual Bandits.
-- **Problem**: LLM API costs are high; static compression risks breaking logic (especially Code).
-- **Core Goal**: Balance "Token Saving" and "Response Quality" dynamically.
+## Slide 1: The Hook (The Problem)
+- **The LLM Dilemma**: "Don't compress and go bankrupt, or compress statically and break your system."
+- **Current State**: LLMLingua/Selective Context are open-loop. They prune based on perplexity, not task success.
+- **The Risk**: A single removed negation in a SQL prompt or a lost keyword in robot navigation leads to catastrophic failure.
 
-## Slide 2: The Core Innovation (Why it's unique)
-- **Beyond Static Rules**: Unlike LLMLingua, our system uses a **Feedback Loop**.
-- **Context Awareness**: Decisions are made based on text features (Length, Lexical Diversity, Codeness).
-- **Algorithm**: **LinUCB Contextual Bandit** - highly sample-efficient and real-time.
+## Slide 2: The Brain (Our Solution)
+- **Core Innovation**: Adaptive Routing via **LinUCB Contextual Bandits**.
+- **Mechanics**:
+  - $d=5$ Linguistic Features (Length, Diversity, Codeness, Entropy).
+  - **Sherman-Morrison** Incremental Update: $O(d^2)$ complexity.
+  - **Result**: < 1ms routing overhead. Zero bottleneck for streaming.
 
-## Slide 3: Methodology (The Math)
-- **Context Vector ($s_t$)**: Extracted from prompt features.
-- **Arms**: Raw ($a_0$), Basic ($a_1$), Aggressive ($a_2$).
-- **Selection Rule**: $a_t = \arg\max (\text{Expected Reward} + \text{Confidence Interval})$.
-- **Reward Function**: $1.5 \cdot \text{Saving} - 0.2 \cdot \text{Latency} - 2.5 \cdot \text{QualityLoss}$.
+## Slide 3: The Shield (Production Robustness)
+- **The Cost-Fidelity Paradox**: How do we prevent 'Defense Offloading'?
+- **Guardrails**:
+  - **Feature Guard (OOD)**: Detecting radical inputs and falling back to safe strategies.
+  - **Online Scaling**: Welford’s algorithm to handle feature scale disparity.
+  - **Reliability-First Policy**: Emergent behavior where the agent sacrifices pennies to save the mission.
 
-## Slide 4: Experimental Results
-- **Token Saving**: Achieved **16.0% overall reduction**.
-- **Success Rate**: Maintained **88.0% validity**.
-- **Codeness Adaptation**: System automatically avoids compressing Python snippets to ensure zero logic loss.
-- **Learning Curve**: Convergence achieved within **50 steps** even under extreme daily API quotas.
+## Slide 4: The Drop (The Results)
+- **Sim2Real Transfer**: Validated on 4,500 steps of simulation and Live Gemini API.
+- **Performance**:
+  - **93.5% Success Rate** (vs 82.5% for static truncation).
+  - **14.2% Token Saving** on average.
+  - **XAI Visualization**: Heatmaps proving the agent learns to protect technical logic.
 
-## Slide 5: Engineering Excellence
-- **Modular Architecture**: Decoupled `src/` (Agent, Env, Utils).
-- **Quality Assurance**: 100% test coverage for core logic via `pytest`.
-- **Reproducibility**: Professional README, One-click `run.sh`, and Live Streamlit Demo.
-
-## Slide 6: Future Vision
-- **Semantic Metrics**: Moving from binary success to **BERTScore** evaluation.
-- **Scalability**: Multi-model routing (switching between Flash and Pro based on complexity).
-- **Closing**: Optimizing the LLM inference frontier for cost-efficiency.
+## Slide 5: The Horizon (Future Work)
+- **Distributed Learning**: Scaling to Redis-backed Parameter Servers for K8s fleets.
+- **Meta-Learning**: Zero-shot domain priors for instant deployment in Medical/Legal fields.
+- **Attention Sink Protection**: Position-aware compression.

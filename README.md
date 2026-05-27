@@ -141,6 +141,16 @@ uv run python scripts/visualize_weights.py
 
 ---
 
+## 🛰️ Research & Edge Computing Use-Cases
+
+The **Adaptive Prompt Compressor** is uniquely positioned for systems where bandwidth is expensive and reliability is non-negotiable:
+
+- **Robotic Edge Intelligence**: Autonomous robots (UAVs/AMRs) translating raw sensor data into LLM prompts. Our system acts as the "Prefrontal Cortex," ensuring critical spatial logic is preserved while minimizing transmission latency to the cloud.
+- **Real-time System Monitoring**: Processing million-line logs into diagnostic summaries. The **Reliability-First** policy prevents the accidental removal of rare error codes or negations in SQL queries.
+- **Agentic Interactions**: High-frequency multi-agent communication where every token saved extends the operation window under API rate limits.
+
+---
+
 ## 🛡️ Production Stability & Flawless Engineering
 
 This project is built for mission-critical LLM deployments, featuring 'Temple-Level' stability optimizations:
