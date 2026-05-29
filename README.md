@@ -26,31 +26,60 @@ Achieve **93.5% reliability** while reducing token costs by dynamically routing 
 | **Code / Technical Logic** | 2.1% | 95.0% | 0.941 | Arm 0 (Conservative) |
 | **Chat / Summarization** | 42.5% | 92.0% | 0.918 | Arm 2 (Aggressive) |
 
-## 🚀 Quick Start (Usage)
+## 🚀 Quick Start (Installation & Usage)
 
-Integrate the adaptive compressor into your Python project in just 3 lines:
+### Option 1: Quick Deployment via Docker Compose 🐳 (Recommended)
+If you want to run the Interactive Dashboard with a Redis Parameter Server instantly:
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/howwang0507/Adaptive-Prompt-Compressor.git
+cd Adaptive-Prompt-Compressor
+
+# 2. Setup environment variables
+cp .env.example .env
+# Edit .env to add your GEMINI_API_KEY, OPENAI_API_KEY, etc.
+
+# 3. Start the application stack
+docker-compose up -d
+
+# 4. Access the UI
+# Open your browser and navigate to http://localhost:8501
+```
+
+### Option 2: Local Development Setup (using `uv`)
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/howwang0507/Adaptive-Prompt-Compressor.git
+cd Adaptive-Prompt-Compressor
+
+# 2. Install dependencies using uv
+uv sync
+
+# 3. Setup environment variables
+cp .env.example .env
+
+# 4. Run the Streamlit Demo locally
+uv run streamlit run src/app.py
+```
+
+### 💻 Basic Usage (Code Integration)
+
+Integrate the adaptive compressor into your Python project or MCP Server in just a few lines. See `examples/basic_usage.py` for more details.
 
 ```python
 from src.interface import LinUCBCompressor
+import os
 
 # Initialize (defaults to Simulation mode if no key provided)
-compressor = LinUCBCompressor(api_key="your_api_key", model_name="gemini-1.5-flash")
+compressor = LinUCBCompressor(api_key=os.getenv("GEMINI_API_KEY"), model_name="gemini-1.5-flash")
 
 # Compress your prompt
-prompt = "Write a complex Python function to handle thread-safe file operations..."
+prompt = "def calculate_fibonacci(n): ..."
 compressed_text, strategy, metadata = compressor.compress(prompt)
 
 print(f"Strategy: {strategy} | Compressed: {compressed_text}")
-```
-
-## 🛠️ Setup & Environment
-
-**1. Dependency Management (using uv)**
-```bash
-# Install uv
-curl -LsSf https://astral.sh/uv/install.sh | sh
-# Sync dependencies
-uv sync
 ```
 
 **2. Secret Management**
