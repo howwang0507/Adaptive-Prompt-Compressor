@@ -1,5 +1,4 @@
 import streamlit as st
-import numpy as np
 import pandas as pd
 import altair as alt
 from src.agent import LinUCB
@@ -141,7 +140,21 @@ if not st.session_state.df_logs.empty:
     tab1, tab2, tab3, tab4 = st.tabs(["📊 Performance", "🧠 Decision Map", "📄 Full Logs", "🔍 Feature Insight"])
     
     with tab1:
-        st.markdown("#### Experiment Metrics")
+        st.markdown("#### 📈 Performance Metrics")
+        
+        # Calculate Costs (Hypothetical $0.15 per 1M tokens for Gemini Flash)
+        COST_PER_M = 0.15
+        total_base_tokens = df["step"].count() * 500 # Estimate
+        df["tokens_saved"] = df["saving_ratio"] * 500
+        total_saved_tokens = df.groupby("mode")["tokens_saved"].sum()
+        total_saved_usd = (total_saved_tokens / 1_000_000) * COST_PER_M
+
+        col1, col2, col3, col4 = st.columns(4)
+        with col1: st.metric("Avg Reward", f"{df[df['mode']=='LinUCB']['reward'].mean():.3f}")
+        with col2: st.metric("Token Saving", f"{df[df['mode']=='LinUCB']['saving_ratio'].mean()*100:.1f}%")
+        with col3: st.metric("Success Rate", f"{df[df['mode']=='LinUCB']['valid'].mean()*100:.1f}%")
+        with col4: st.metric("Est. Savings (USD)", f"${total_saved_usd.get('LinUCB', 0):.4f}")
+
         exp_table = df.groupby("mode").agg(
             Reward=("reward", "mean"),
             Saving=("saving_ratio", lambda x: f"{x.mean()*100:.1f}%"),
@@ -151,34 +164,43 @@ if not st.session_state.df_logs.empty:
         st.table(exp_table)
         
         reward_chart = alt.Chart(df).mark_line().encode(
-            x='step', y='avg_reward', color='mode'
-        ).properties(height=350).interactive()
+            x='step', y='avg_reward', color='mode', strokeDash='mode'
+        ).properties(height=350, title="Learning Curve (Average Reward)").interactive()
         st.altair_chart(reward_chart, use_container_width=True)
 
     with tab2:
-        st.markdown("#### Strategy Distribution (LinUCB)")
+        st.markdown("#### 🧠 Strategy Distribution (Agent Decision Map)")
         pivot_df = df[df["mode"]=="LinUCB"].groupby(["category", "arm"]).size().reset_index(name='counts')
         pivot_df['Selection Rate (%)'] = pivot_df.groupby('category')['counts'].transform(lambda x: (x / x.sum() * 100))
+        
+        arm_names = {0: "Arm 0: Raw", 1: "Arm 1: Basic", 2: "Arm 2: Aggressive"}
+        pivot_df['Strategy'] = pivot_df['arm'].map(arm_names)
+
         selection_chart = alt.Chart(pivot_df).mark_bar().encode(
-            x='category:N', y='Selection Rate (%):Q', color='arm:N'
-        ).properties(height=350)
+            x='category:N', y='Selection Rate (%):Q', color='Strategy:N',
+            tooltip=['category', 'Strategy', 'Selection Rate (%)']
+        ).properties(height=400, title="How the Agent chooses strategies for each task type")
         st.altair_chart(selection_chart, use_container_width=True)
+        st.info("💡 **Observation**: For 'Code' tasks, a well-trained Agent should prefer 'Arm 0' to avoid breaking logic.")
 
     with tab3:
-        st.dataframe(df, use_container_width=True)
+        st.markdown("#### 📄 Execution Telemetry")
+        st.dataframe(df.sort_values("step", ascending=False), use_container_width=True)
 
     with tab4:
-        st.markdown("#### Feature Distribution by Category")
+        st.markdown("#### 🔍 Feature Distribution by Category")
         # Extract features for one sample per category to visualize
         env = SimulatedEnvironment()
         feat_data = []
+        feature_names = ["Length", "Diversity", "Codeness", "Punctuation", "Structural"]
         for cat in ["Chat", "Code", "QA", "Summarization", "Translation"]:
             sample = next((d for d in REAL_DATA if d["category"] == cat), None)
             if sample:
                 f = env.extract_features(sample["text"])
-                feat_data.append({"Category": cat, "Length": f[0], "Diversity": f[1], "Codeness": f[2], "Entropy": f[3]})
+                for name, val in zip(feature_names, f):
+                    feat_data.append({"Category": cat, "Feature": name, "Value": val})
         
-        feat_df = pd.DataFrame(feat_data).melt(id_vars="Category", var_name="Feature", value_name="Value")
+        feat_df = pd.DataFrame(feat_data)
         
         feat_chart = alt.Chart(feat_df).mark_bar().encode(
             x='Feature:N',
@@ -187,4 +209,5 @@ if not st.session_state.df_logs.empty:
             column='Category:N'
         ).properties(width=120, height=200)
         st.altair_chart(feat_chart)
-        st.write("**Insight**: Notice how **Codeness** is high for 'Code' but 0 for others, helping the LinUCB Agent distinguish sensitive tasks.")
+        st.write("**Explainability**: The Agent uses these 5 dimensions to 'see' the prompt. High **Codeness** and **Punctuation** density are key indicators for technical content.")
+

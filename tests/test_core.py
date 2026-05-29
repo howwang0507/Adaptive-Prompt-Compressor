@@ -1,13 +1,12 @@
 import pytest
-import numpy as np
 from src.agent import LinUCB
 from src.utils import calculate_reward
 
 def test_linucb_initialization():
     agent = LinUCB(n_arms=3, n_features=5)
     assert agent.n_arms == 3
-    assert len(agent.A) == 3
-    assert agent.A[0].shape == (5, 5)
+    assert len(agent.A_inv) == 3
+    assert agent.A_inv[0].shape == (5, 5)
 
 def test_linucb_select_arm():
     agent = LinUCB(n_arms=2, n_features=2)

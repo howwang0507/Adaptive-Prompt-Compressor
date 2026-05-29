@@ -1,18 +1,31 @@
-# Documentation binaries
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Documentation binaries & Trash
 *.docx
 *.pdf
 ~$*.docx
+trash/
+overleaf_upload/
 
 # Python environment
+.venv/
 venv/
 __pycache__/
 *.pyc
 .pytest_cache/
+.ruff_cache/
+.mypy_cache/
 
-# Local data
+# Local data & Results
 *.csv
-results/
+results/*.csv
+data/*.csv
+!data/.gitkeep
 
-# Secrets
+# Secrets & Config
 gcp-key.json
-*.env
+.env
+.env.local
+*.log

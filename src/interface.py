@@ -1,4 +1,3 @@
-import numpy as np
 import os
 from .agent import LinUCB
 from .environment import RealLLMEnvironment, SimulatedEnvironment

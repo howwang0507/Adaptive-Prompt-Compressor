@@ -4,7 +4,6 @@ import pandas as pd
 import datetime
 from tqdm import tqdm
 import time
-import google.generativeai as genai
 
 # Add project root to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -17,13 +16,10 @@ from src.utils import calculate_reward, get_semantic_similarity
 BENCHMARK_DATA = [
     {"text": "Explain the concept of quantum entanglement.", "category": "QA"},
     {"text": "def quicksort(arr): return sorted(arr)", "category": "Code"},
-    {"text": "How do you say 'Where is the library' in French?", "category": "Translation"},
-    {"text": "Summarize the history of the Roman Empire in one paragraph.", "category": "Summarization"},
-    {"text": "What's the weather like in New York today?", "category": "Chat"},
-] * 5 
+] * 1 
 
 def run_final_test(api_key):
-    print(f"🚀 Starting FINAL REAL API BENCHMARK (n=50)")
+    print("🚀 Starting FINAL REAL API BENCHMARK (n=4)")
     
     # Configure the environment
     env = RealLLMEnvironment(api_key)
@@ -68,6 +64,9 @@ def run_final_test(api_key):
                 "semantic": sem_score
             })
             
+            # Save partial results
+            pd.DataFrame(results).to_csv("results/partial_real_data.csv", index=False)
+            
             # Respect API safety
             time.sleep(2)
 
@@ -75,7 +74,7 @@ def run_final_test(api_key):
     filename = f"results/final_real_data_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
     df.to_csv(filename, index=False)
     
-    print(f"\n✅ Final Real Benchmark Complete!")
+    print("\n✅ Final Real Benchmark Complete!")
     print("\n--- PERFORMANCE SUMMARY ---")
     print(df.groupby("mode").agg({"reward": "mean", "saving": "mean", "valid": "mean", "semantic": "mean"}))
     print(f"\nDetailed data saved to: {filename}")

@@ -22,7 +22,7 @@ BENCHMARK_DATA = [
 ] * 20 # 100 samples for the Vertex test
 
 def run_vertex_benchmark(project_id, key_path):
-    print(f"🚀 Starting Large-Scale Vertex AI Benchmark")
+    print("🚀 Starting Large-Scale Vertex AI Benchmark")
     print(f"Project ID: {project_id}")
     
     # Initialize Vertex AI Environment

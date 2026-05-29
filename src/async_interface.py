@@ -1,7 +1,6 @@
 import asyncio
-import json
 import os
-from typing import List, Tuple, Dict, Any, Optional
+from typing import List, Tuple, Dict, Any
 from .agent import LinUCB
 from .environment import RealLLMEnvironment, SimulatedEnvironment
 

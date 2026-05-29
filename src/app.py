@@ -5,12 +5,13 @@ import plotly.express as px
 import plotly.graph_objects as go
 import os
 import sys
+import random
 
 # Add project root to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.agent import LinUCB
-from src.environment import SimulatedEnvironment, RealLLMEnvironment
+from src.environment import SimulatedEnvironment, RealLLMEnvironment, OpenAIEnvironment, AnthropicEnvironment
 from src.utils import calculate_reward
 
 st.set_page_config(
@@ -21,27 +22,57 @@ st.set_page_config(
 
 st.title("🧠 Adaptive Prompt Compressor")
 st.markdown("""
-### Contextual Bandits for Dynamic LLM Routing
-This interactive dashboard demonstrates how a **LinUCB Contextual Bandit** learns to optimize prompt compression strategies based on linguistic features and real-time feedback.
+### Neural Contextual Bandits for Dynamic LLM Routing
+This interactive dashboard demonstrates an upgraded **Hybrid Neural-LinUCB Bandit**. It combines structural features with SBERT-derived neural embeddings to achieve high-precision prompt routing.
 """)
 
 # --- Sidebar: Configuration ---
 st.sidebar.header("⚙️ Configuration")
-mode = st.sidebar.selectbox("Execution Mode", ["Simulation (Offline)", "Live API (GCP)"])
+mode = st.sidebar.selectbox("Execution Mode", ["Simulation (Offline)", "Live API (Gemini)", "Live API (OpenAI)", "Live API (Anthropic)"])
 alpha = st.sidebar.slider("Exploration Factor (Alpha)", 0.1, 2.0, 1.0)
 
-if mode == "Live API (GCP)":
-    api_key = st.sidebar.text_input("GCP API Key", type="password", value=os.environ.get("GEMINI_API_KEY", ""))
+# Initialize Agent (Upgraded to 12D Feature Space)
+if 'agent' not in st.session_state:
+    st.session_state.agent = LinUCB(n_arms=3, n_features=12, alpha=alpha)
+
+# Pre-train Option
+if st.sidebar.button("🎓 Pre-train Neural Agent (Sim 50 steps)"):
+    sim_env = SimulatedEnvironment()
+    for _ in range(50):
+        prompts = [
+            "def solve(): return 42",
+            "Explain quantum physics in simple terms.",
+            "Write a short story about AI."
+        ]
+        txt = random.choice(prompts)
+        feats = sim_env.extract_features(txt)
+        a = st.session_state.agent.select_arm(feats)
+        res = sim_env.execute_request(txt, a)
+        rew, _, _, _ = calculate_reward(res['base_tokens'], res['comp_tokens'], res['latency'], res['valid'], semantic_score=0.9)
+        st.session_state.agent.update(a, feats, rew)
+    st.sidebar.success("Neural Agent pre-trained!")
+
+env = None
+if mode == "Live API (Gemini)":
+    api_key = st.sidebar.text_input("Gemini API Key", type="password", value=os.environ.get("GEMINI_API_KEY", ""))
     if not api_key:
-        st.warning("Please provide a Gemini API Key to run live tests.")
-    env = RealLLMEnvironment(api_key) if api_key else None
+        st.sidebar.warning("Please provide a Gemini API Key to run live tests.")
+    else:
+        env = RealLLMEnvironment(api_key)
+elif mode == "Live API (OpenAI)":
+    api_key = st.sidebar.text_input("OpenAI API Key", type="password", value=os.environ.get("OPENAI_API_KEY", ""))
+    if not api_key:
+        st.sidebar.warning("Please provide an OpenAI API Key.")
+    else:
+        env = OpenAIEnvironment(api_key)
+elif mode == "Live API (Anthropic)":
+    api_key = st.sidebar.text_input("Anthropic API Key", type="password", value=os.environ.get("ANTHROPIC_API_KEY", ""))
+    if not api_key:
+        st.sidebar.warning("Please provide an Anthropic API Key.")
+    else:
+        env = AnthropicEnvironment(api_key)
 else:
     env = SimulatedEnvironment()
-
-# Initialize Agent
-if 'agent' not in st.session_state:
-    st.session_state.agent = LinUCB(n_arms=3, n_features=5, alpha=alpha)
-agent = st.session_state.agent
 
 # --- Main Layout ---
 col1, col2 = st.columns([1, 1])
@@ -55,40 +86,38 @@ with col1:
     )
     
     if st.button("🚀 Process with LinUCB"):
-        if mode == "Live API (GCP)" and env is None:
+        if mode.startswith("Live") and env is None:
             st.error("API Key required for Live Mode.")
         else:
             # 1. Feature Extraction
             features = env.extract_features(user_input)
             
             # 2. Agent Decision
-            # Calculate UCB scores for visualization
             p = []
-            for a in range(agent.n_arms):
-                x = features.reshape(-1, 1)
-                theta = agent.A_inv[a] @ agent.b[a]
-                ucb = theta.T @ x + agent.alpha * np.sqrt(x.T @ agent.A_inv[a] @ x)
+            for a in range(st.session_state.agent.n_arms):
+                x = np.array(features).reshape(-1, 1)
+                theta = st.session_state.agent.A_inv[a] @ st.session_state.agent.b[a]
+                ucb = theta.T @ x + st.session_state.agent.alpha * np.sqrt(x.T @ st.session_state.agent.A_inv[a] @ x)
                 p.append(ucb.item())
             
-            arm = agent.select_arm(features)
+            arm = st.session_state.agent.select_arm(features)
             
             # 3. Execution
             with st.spinner(f"Agent selected Arm {arm}... Running..."):
                 res = env.execute_request(user_input, arm)
+                compressed_text = env.compress_prompt(user_input, arm)
                 
             # 4. Display Results
             st.success(f"Strategy Selected: **Arm {arm}** ({['Conservative', 'Moderate', 'Aggressive'][arm]})")
+            st.info(f"**Compressed Prompt:**\n\n{compressed_text}")
             
-            st.info(f"**Compressed Prompt:**\n\n{res['compressed_prompt']}")
-            
+            if "def" in user_input.lower() and not env.validate_syntax(res["answer"]):
+                 st.error("❌ Hard Metric Alert: Syntactically Invalid Code generated after compression.")
+
             # Feature display
             st.write("---")
-            st.write("🔍 **Extracted Context Vector ($s_t$):**")
-            feat_df = pd.DataFrame({
-                "Feature": ["Length", "Lexical Diversity", "Codeness", "Complexity", "Bias"],
-                "Value": features
-            })
-            st.table(feat_df)
+            st.write("🔍 **Extracted 12D Context Vector (Hybrid Neural):**")
+            st.write(features)
 
 with col2:
     st.subheader("📈 Decision Analytics")
@@ -102,7 +131,7 @@ with col2:
         st.plotly_chart(fig_ucb, use_container_width=True)
         
         # Token Savings Gauges
-        saving_pct = (1 - (res['comp_tokens'] / res['base_tokens'])) * 100
+        saving_pct = (1 - (res['comp_tokens'] / res['base_tokens'])) * 100 if res['base_tokens'] > 0 else 0
         fig_gauge = go.Figure(go.Indicator(
             mode = "gauge+number",
             value = saving_pct,
@@ -114,9 +143,32 @@ with col2:
                          {'range': [20, 50], 'color': "gray"}]}))
         st.plotly_chart(fig_gauge, use_container_width=True)
 
-# --- Historical Results ---
+# --- Historical Results & Weights ---
 st.write("---")
-st.subheader("📜 Recent Experiment Logs")
+st.subheader("📜 Analytics & Weights")
+
+col3, col4 = st.columns([1, 1])
+
+with col3:
+    st.markdown(r"#### Neural Weight Heatmap ($\theta$)")
+    weights = st.session_state.agent.get_weights()
+    v_min = np.min(weights) if np.any(weights) else -0.1
+    v_max = np.max(weights) if np.any(weights) else 0.1
+    
+    feat_labels = ["Len", "Div", "Code"] + [f"N_{i}" for i in range(8)] + ["Bias"]
+    
+    fig_heatmap = px.imshow(
+        weights, 
+        labels=dict(x="Features", y="Arms", color="Weight"),
+        x=feat_labels,
+        y=["Arm 0", "Arm 1", "Arm 2"],
+        color_continuous_scale="RdBu_r",
+        zmin=v_min, zmax=v_max
+    )
+    st.plotly_chart(fig_heatmap, use_container_width=True)
+
+with col4:
+    st.markdown("#### Recent Experiment Logs")
 
 # Load latest results
 result_files = [f for f in os.listdir("results") if f.endswith(".csv")]
@@ -134,5 +186,5 @@ else:
     st.write("No logs found. Run a benchmark to see history.")
 
 st.sidebar.markdown("---")
-st.sidebar.write("Developed by **Wang Hao**")
+st.sidebar.write("Developed by **MINGHAO WANG**")
 st.sidebar.write("Project: Adaptive Prompt Compressor")

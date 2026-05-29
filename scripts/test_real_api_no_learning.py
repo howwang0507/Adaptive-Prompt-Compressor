@@ -22,7 +22,7 @@ TEST_DATA = [
 ] * 2
 
 def run_real_test(api_key):
-    print(f"🚀 Starting Real API Test (Mode: NO LEARNING)")
+    print("🚀 Starting Real API Test (Mode: NO LEARNING)")
     env = RealLLMEnvironment(api_key)
     # Initialize a fresh agent
     agent = LinUCB(n_arms=3, n_features=5)
@@ -74,5 +74,8 @@ def run_real_test(api_key):
     print(f"\nData saved to: {filename}")
 
 if __name__ == "__main__":
-    api_key = "AIzaSyAGEGaCjb6NEVLyBKLfuz1Zc-HpRSGgtA4"
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        print("❌ Error: GEMINI_API_KEY environment variable not set.")
+        sys.exit(1)
     run_real_test(api_key)

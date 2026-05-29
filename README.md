@@ -11,10 +11,12 @@ Achieve **93.5% reliability** while reducing token costs by dynamically routing 
 
 ## 🌟 Key Features & Academic Highlights
 
-1. **Adaptive Contextual Routing**: Unlike static compression methods (e.g., LLMLingua), our system uses a $d=5$ feature vector (Length, Lexical Diversity, Structural Codeness, Semantic Entropy, Bias) to dynamically select compression strategies.
-2. **Ultra-Low Latency ($O(d^2)$)**: The LinUCB algorithm guarantees a computational complexity of $O(d^2)$. Routing overhead is strictly **< 1ms**, ideal for real-time asynchronous pipelines.
-3. **Sim2Real Transferability**: Validated across a 4,500-step Offline Simulation and Live API Deployment (Gemini 1.5 Flash).
-4. **Reliability-First Emergence**: In high-penalty environments ($\lambda_f = 2.5$), the agent autonomously learns to protect structural logic, achieving a **93.5% Success Rate**.
+1. **Hybrid Neural-Structural Context ($R^{12}$)**: Unlike static methods, our system uses an expanded 12-dimensional feature vector. It integrates **SBERT-derived neural embeddings** for deep semantic understanding with traditional structural metrics (Length, Diversity, Codeness).
+2. **Multi-Provider Support**: Production-ready environments for **Google Gemini, OpenAI (GPT-4o), and Anthropic (Claude 3.5)**.
+3. **AST-based Hard Metrics**: For technical tasks, the system incorporates real-time **Syntax Validation** to ensure compressed code remains executable.
+4. **Ultra-Low Latency ($O(d^2)$)**: The LinUCB algorithm guarantees a computational complexity of $O(d^2)$. Routing overhead is strictly **< 1ms**, ideal for real-time asynchronous pipelines.
+5. **Distributed Fleet Learning**: Decoupled state management using **Redis** enables asynchronous weight synchronization across heterogeneous worker clusters.
+6. **Reliability-First Emergence**: In high-penalty environments, the agent autonomously learns to protect structural logic, achieving a **93.5% Success Rate**.
 
 ## 📊 Performance Summary
 
@@ -179,7 +181,7 @@ For distributed, massive-scale deployments (e.g., K8s clusters serving millions 
 
 @article{Wang2026Adaptive,
   title={Adaptive Prompt Compression via Contextual Bandits: Balancing Token Cost and Semantic Fidelity in Resource-Constrained Environments},
-  author={Hao, Wang},
+  author={MINGHAO WANG},
   journal={GitHub Repository},
   year={2026},
   url={https://github.com/howwang0507/Adaptive-Prompt-Compressor}

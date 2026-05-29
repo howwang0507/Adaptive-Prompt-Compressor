@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 from src.agent import LinUCB
 from src.environment import SimulatedEnvironment
@@ -50,6 +49,16 @@ def run_ablation():
     df.to_csv("ablation_results.csv", index=False)
     print("Ablation Study Complete. Results saved to ablation_results.csv")
     print(df)
+    
+    # Generate PNG
+    import matplotlib.pyplot as plt
+    plt.figure(figsize=(10, 6))
+    plt.bar(df["Configuration"], df["Final Avg Reward"], color=['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728'])
+    plt.title("Ablation Study: Feature Importance Analysis", fontsize=14, fontweight='bold')
+    plt.ylabel("Final Average Reward")
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.savefig("ablation_study.png", dpi=300)
+    print("Figure saved as ablation_study.png")
 
 if __name__ == "__main__":
     run_ablation()

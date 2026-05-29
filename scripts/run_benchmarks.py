@@ -11,32 +11,37 @@ from src.agent import LinUCB
 from src.environment import RealLLMEnvironment, SimulatedEnvironment
 from src.utils import calculate_reward, get_semantic_similarity
 
-# --- Benchmark Dataset ---
+# --- Benchmark Dataset (Simulating HumanEval & GSM8K) ---
+# In production, this would load from datasets library
 BENCHMARK_DATA = [
     {"text": "Explain the concept of quantum entanglement.", "category": "QA"},
     {"text": "def quicksort(arr): return sorted(arr)", "category": "Code"},
-    {"text": "How do you say 'Where is the library' in French?", "category": "Translation"},
+    {"text": "A train travels at 60mph for 2 hours. How far does it go?", "category": "Math"},
     {"text": "Summarize the history of the Roman Empire in one paragraph.", "category": "Summarization"},
     {"text": "What's the weather like in New York today?", "category": "Chat"},
-] * 300 # Expand to 125 samples
+] * 300 # Expand to 1500 samples per mode (4500 total)
 
 def run_benchmark(api_key=None):
-    mode_names = ["Baseline", "Rule_Based", "LinUCB"]
+    # Added LLMLingua (Budget-based Simulation)
+    mode_names = ["Baseline", "Rule_Based", "LLMLingua_Sim", "LinUCB"]
     env = RealLLMEnvironment(api_key) if api_key else SimulatedEnvironment()
     
     all_logs = []
     
     for mode in mode_names:
         print(f"\n🚀 Running mode: {mode}")
-        agent = LinUCB(n_arms=3, n_features=5) if mode == "LinUCB" else None
+        # Updated to 12 features for Neural Bandit
+        agent = LinUCB(n_arms=3, n_features=12) if mode == "LinUCB" else None
         cumulative_reward = 0
         
-        # Use tqdm for progress bar
         for i, data in enumerate(tqdm(BENCHMARK_DATA)):
             features = env.extract_features(data["text"])
             
             # Action Selection
             if mode == "Baseline": arm = 0
+            elif mode == "LLMLingua_Sim":
+                # Simulated budget-aware behavior (Aggressive on Chat, Conservative on Code)
+                arm = 0 if data["category"] == "Code" else (2 if data["category"] in ["Chat", "Summarization"] else 1)
             elif mode == "Rule_Based": 
                 arm = 0 if features[2] == 1.0 else (2 if len(data["text"]) > 100 else 1)
             elif mode == "LinUCB": 

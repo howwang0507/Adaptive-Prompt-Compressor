@@ -54,6 +54,7 @@ def plot_distribution():
     plt.legend(title='Selected Arm')
     plt.tight_layout()
     plt.savefig(os.path.join(assets_dir, "figure_2_distribution.png"), dpi=300)
+    plt.savefig("token_saving_comparison.png", dpi=300) # Duplicate for user ease
     plt.close()
 
 # 3. Figure 3: Pareto Frontier

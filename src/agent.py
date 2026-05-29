@@ -1,6 +1,16 @@
 import numpy as np
 import threading
-from typing import List, Tuple, Optional, Any
+import os
+import json
+import logging
+from typing import List, Tuple, Optional, Dict
+
+try:
+    import redis
+    REDIS_URL = os.environ.get("REDIS_URL")
+    redis_client = redis.Redis.from_url(REDIS_URL) if REDIS_URL else None
+except ImportError:
+    redis_client = None
 
 class OnlineScaler:
     """
@@ -43,7 +53,7 @@ class OnlineScaler:
 class LinUCB:
     """
     Contextual Multi-Armed Bandit using the LinUCB algorithm.
-    Enhanced for Numerical Stability, Thread-Safety, and OOD Protection.
+    Enhanced for Numerical Stability, Thread-Safety, OOD Protection, and Redis Distributed Sync.
     """
     def __init__(self, n_arms: int, n_features: int, alpha: float = 1.0, 
                  gamma: float = 0.99, lambda_reg: float = 1.0,
@@ -52,6 +62,7 @@ class LinUCB:
         self.n_features: int = n_features
         self.alpha: float = alpha
         self.gamma: float = gamma
+        self.use_redis = redis_client is not None
         
         # Ridge Regularization or Meta-Learning Warm Start
         if domain_priors:
@@ -62,6 +73,9 @@ class LinUCB:
         else:
             self.A_inv: List[np.ndarray] = [np.identity(n_features) / lambda_reg for _ in range(n_arms)]
             self.b: List[np.ndarray] = [np.zeros((n_features, 1)) for _ in range(n_arms)]
+            
+        if self.use_redis:
+            self._sync_from_redis()
         
         # Scaler for online normalization
 
@@ -70,11 +84,37 @@ class LinUCB:
         # Thread safety lock
         self._lock: threading.Lock = threading.Lock()
 
-    def select_arm(self, features: np.ndarray) -> int:
+    def _sync_from_redis(self):
+        """Fetches latest matrices from Redis parameter server."""
+        if not self.use_redis: return
+        try:
+            for a in range(self.n_arms):
+                a_data = redis_client.get(f"linucb:A_inv:{a}")
+                b_data = redis_client.get(f"linucb:b:{a}")
+                if a_data: self.A_inv[a] = np.array(json.loads(a_data))
+                if b_data: self.b[a] = np.array(json.loads(b_data))
+        except Exception as e:
+            logging.error(f"Redis sync failed: {e}")
+
+    def _sync_to_redis(self, arm: int):
+        """Pushes latest matrices to Redis parameter server."""
+        if not self.use_redis: return
+        try:
+            redis_client.set(f"linucb:A_inv:{arm}", json.dumps(self.A_inv[arm].tolist()))
+            redis_client.set(f"linucb:b:{arm}", json.dumps(self.b[arm].tolist()))
+        except Exception as e:
+            logging.error(f"Redis write failed: {e}")
+
+    def select_arm(self, features: np.ndarray, step: Optional[int] = None) -> int:
         """
         Selects the optimal arm using UCB strategy.
-        Now performs OOD check to prevent radical failures.
         """
+        if self.use_redis:
+            self._sync_from_redis()
+
+        if isinstance(features, list):
+            features = np.array(features)
+
         if self.scaler.is_ood(features):
             # Fallback to Arm 0 (Conservative) for OOD inputs
             return 0
@@ -86,27 +126,33 @@ class LinUCB:
             for a in range(self.n_arms):
                 theta = self.A_inv[a] @ self.b[a]
                 # UCB Score using Sherman-Morrison pre-calculated Inverse
-                p[a] = theta.T @ x + self.alpha * np.sqrt(x.T @ self.A_inv[a] @ x)
+                term1 = (theta.T @ x).item()
+                term2 = self.alpha * np.sqrt((x.T @ self.A_inv[a] @ x).item())
+                p[a] = term1 + term2
             
         return int(np.argmax(p))
 
     def update(self, arm: int, features: np.ndarray, reward: float) -> None:
         """
         Updates agent state using Sherman-Morrison for O^2 incremental inverse update.
-        Ensures Numerical Stability and Thread-Safety.
         """
+        if isinstance(features, list):
+            features = np.array(features)
+
         self.scaler.update(features)
         x = self.scaler.transform(features).reshape(-1, 1)
         
         with self._lock:
             # 1. Sherman-Morrison Incremental Inverse Update (Avoids O^3 Inversion)
-            # A_inv = (1/gamma) * (A_inv - (A_inv * x * x.T * A_inv) / (gamma + x.T * A_inv * x))
             inv_a = self.A_inv[arm]
             denom = self.gamma + (x.T @ inv_a @ x)
             self.A_inv[arm] = (1.0 / self.gamma) * (inv_a - (inv_a @ x @ x.T @ inv_a) / denom)
             
             # 2. Update b vector with decay
             self.b[arm] = self.gamma * self.b[arm] + (reward * x)
+
+        if self.use_redis:
+            self._sync_to_redis(arm)
 
     def get_weights(self) -> np.ndarray:
         with self._lock:

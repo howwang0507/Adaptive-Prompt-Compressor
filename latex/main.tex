@@ -1,6 +1,6 @@
 \documentclass{article}
 
-% ----- Load NeurIPS Style -----
+% ----- Load NeurIPS Style (Academic Standard) -----
 \usepackage[final]{neurips} 
 
 % ----- Basic Packages -----
@@ -37,44 +37,35 @@ As Large Language Model (LLM) agents proliferate in bandwidth-constrained edge c
 \end{abstract}
 
 \section{Introduction}
-The rapid proliferation of Large Language Model (LLM) applications has brought inference cost and latency to the forefront of research. Most commercial APIs, such as those provided by Google Vertex AI and OpenAI, utilize token-based billing, creating a direct financial incentive to minimize input length. However, aggressive compression techniques often introduce a "fidelity-cost trade-off," where the loss of subtle semantic nuances leads to model hallucinations or execution failures in structural tasks like code generation or SQL querying.
+The rapid proliferation of Large Language Model (LLM) applications has brought inference cost and latency to the forefront of research. Most commercial APIs utilize token-based billing, creating a direct financial incentive to minimize input length. Aggressive compression techniques often introduce a "fidelity-cost trade-off," where the loss of subtle semantic nuances leads to model hallucinations. In mission-critical domains such as \textbf{Robotic Edge Computing}, a failed compression is a catastrophic system failure. 
 
-In mission-critical domains such as \textbf{Robotic Edge Computing} and \textbf{Real-time System Monitoring}, prompts are frequently long, structurally dense, and mission-critical. A failed compression in a robotic navigation prompt is not merely a "noisy response"—it is a catastrophic system failure. Current state-of-the-art compression techniques, such as LLMLingua, typically rely on information-theoretic metrics like perplexity to prune redundant tokens. While effective for static contexts, these methods are "open-loop" and remain largely agnostic to the specific downstream task's tolerance for information loss.
-
-In this work, we propose a novel \textbf{Adaptive Prompt Compression} framework. We frame the problem as a \textbf{Contextual Multi-Armed Bandit (CMAB)}, where an intelligent agent learns to select the optimal compression strategy based on real-time feedback from the LLM’s response validity. Our contributions include: (1) An adaptive routing architecture based on task-specific linguistic features. (2) A numerically stable LinUCB implementation utilizing Sherman-Morrison updates. (3) Empirical validation of emergent reliability-first behavior in production-grade environments.
-
-\section{Related Work}
-\subsection{Static Prompt Compression}
-Techniques like \textit{Selective Context} and \textit{LLMLingua} have demonstrated that LLMs exhibit significant redundancy. By calculating the self-information of tokens via small language models (SLMs), these methods remove "low-value" words to reduce costs. However, these are fundamentally open-loop systems that do not incorporate the final response quality or semantic fidelity into their optimization process, leading to instability in technical domains.
-
-\subsection{Contextual Bandits in NLP}
-Multi-Armed Bandits (MAB) have been applied to model selection and cascading in LLM workflows. However, these applications usually focus on choosing between models of different sizes (e.g., GPT-4 vs. LLaMA). Our work extends this lineage to the intra-prompt optimization space, focusing on the dynamic selection of compression ratios based on the linguistic context of the input itself.
+In this work, we propose a novel \textbf{Adaptive Prompt Compression} framework. We frame the problem as a \textbf{Contextual Multi-Armed Bandit (CMAB)}, where an intelligent agent learns to select the optimal compression strategy based on real-time feedback from the LLM’s response validity and semantic fidelity.
 
 \section{Methodology}
 
 \subsection{Feature Representation}
-For each incoming prompt $x_t$, we extract a context vector $s_t \in \mathbb{R}^5$ designed to capture the structural and semantic complexity of the task:
+For each incoming prompt $x_t$, we extract a context vector $s_t \in \mathbb{R}^5$ capturing linguistic complexity:
 \begin{itemize}
     \item $s_{t,1}$: \textbf{Normalized Length}: Total character count clamped at 1000 characters.
-    \item $s_{t,2}$: \textbf{Lexical Diversity}: Unique/Total word ratio, proxying semantic density.
-    \item $s_{t,3}$: \textbf{Structural Codeness}: A binary flag detected via regex for programming keywords (\texttt{def}, \texttt{if}, \texttt{import}).
+    \item $s_{t,2}$: \textbf{Lexical Diversity}: Unique/Total word ratio.
+    \item $s_{t,3}$: \textbf{Structural Codeness}: A binary flag detected via regex for programming keywords.
     \item $s_{t,4}$: \textbf{Semantic Entropy Approximation}: Average character length of tokens.
-    \item $s_{t,5}$: \textbf{Bias Term}: Constant 1.0 for linear intercept.
+    \item $s_{t,5}$: \textbf{Bias Term}: Constant 1.0.
 \end{itemize}
 
 \subsection{Contextual Compression Arms}
-Unlike static methods that use uniform pruning (e.g., perplexity-based truncation), our framework utilizes three distinct arms representing varying levels of semantic density and computational preservation:
+Our framework utilizes three distinct arms representing varying levels of preservation:
 \begin{itemize}
-    \item \textbf{Arm 0: Identity (Raw)}: Maintains bit-level fidelity for high-sensitivity tasks (e.g., cryptographic keys, complex logic).
-    \item \textbf{Arm 1: Structural Minimization}: Performs regex-based minification of non-semantic characters (whitespace, indentation) while preserving line-level structure.
-    \item \textbf{Arm 2: POS-aware Syntactic Extraction}: A sophisticated strategy utilizing NLTK for Part-of-Speech (POS) tagging. By applying a filter mask that retains only Nouns (NN*), Verbs (VB*), and Adjectives (JJ*), the system extracts the "Semantic Skeleton" of the prompt. This approach ensures that while the token count is minimized, the subject-predicate-object relationship remains intact for the LLM's attention mechanism.
+    \item \textbf{Arm 0: Identity (Raw)}: Maintains bit-level fidelity for high-sensitivity tasks.
+    \item \textbf{Arm 1: Structural Minimization}: Performs regex-based minification of non-semantic characters.
+    \item \textbf{Arm 2: POS-aware Syntactic Extraction}: A strategy utilizing NLTK for Part-of-Speech tagging, extracting the "Semantic Skeleton" by retaining only nouns, verbs, and adjectives.
 \end{itemize}
 
 \subsection{Distributed Weight Synchronization}
-To achieve horizontal scalability and low-latency inference, we decouple the bandit's state from the execution worker. We implement a \textbf{Redis-backed Parameter Server} that stores the global state matrices $\{A^{-1}, b\}$. Workers perform local $O(d^2)$ updates using the Sherman-Morrison formula and synchronize weight increments via an asynchronous heartbeat mechanism. This architecture facilitates \textbf{Cross-Node Learning}, where catastrophic failures detected by one worker (e.g., a blocked API request) are immediately propagated to the global policy, preventing redundant failures across the fleet.
+To achieve horizontal scalability and low-latency inference, we decouple the bandit's state from the inference worker. We implement a \textbf{Redis-backed Parameter Server} that stores the global state matrices $\{A^{-1}, b\}$. Workers perform local $O(d^2)$ updates using the Sherman-Morrison formula and asynchronously synchronize weights, enabling a "global fleet learning" effect where a failure in one node immediately informs the policy of others.
 
-\subsection{Algorithm: Numerically Stable LinUCB}
-To ensure production stability, we implement the LinUCB algorithm with the \textbf{Sherman-Morrison formula}, allowing for $O(d^2)$ incremental updates of the inverse covariance matrix $A_a^{-1}$ without the instability of direct $O(d^3)$ inversion.
+\subsection{Numerically Stable LinUCB Algorithm}
+To ensure production stability, we implement the LinUCB algorithm with the \textbf{Sherman-Morrison formula} (Algorithm 1), allowing for $O(d^2)$ incremental updates of the inverse covariance matrix without direct $O(d^3)$ inversion.
 
 \begin{algorithm}[H]
 \caption{Adaptive Prompt Compression with Sherman-Morrison Update}
@@ -97,11 +88,9 @@ To ensure production stability, we implement the LinUCB algorithm with the \text
 
 \section{Experimental Results}
 
-\subsection{Simulation Performance and Baseline Comparison}
-We compare the LinUCB agent against three baselines: (1) \textbf{Baseline (Raw)}: No compression. (2) \textbf{Static Truncation}: Fixed 20\% pruning. (3) \textbf{Random Agent}: Stochastic selection of compression arms.
-
 \begin{table}[H]
   \caption{Performance Metrics Comparison (n=4500 total steps)}
+  \label{tab:metrics}
   \centering
   \begin{tabular}{lcccc}
     \toprule
@@ -109,85 +98,76 @@ We compare the LinUCB agent against three baselines: (1) \textbf{Baseline (Raw)}
     \midrule
     Baseline (Raw) & \textbf{98.2} & 0.0 & 0.924 & -0.42 \\
     Static Truncation & 82.5 & \textbf{15.0} & 0.923 & -0.68 \\
-    Random Agent & 76.4 & 18.2 & 0.920 & -0.85 \\
-    \textbf{LinUCB (Ours)} & \textbf{93.5} & \textbf{14.2} & \textbf{0.923} & \textbf{-0.51} \\
+    \textbf{LinUCB (Ours)} & \textbf{93.5} & \textbf{14.2} & \textbf{0.923 (SBERT)} & \textbf{-0.51} \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-\subsection{Ablation Study: The Role of Codeness Features}
-To quantify the impact of linguistic awareness, we conducted an ablation study by removing the $s_{t,3}$ (Codeness) feature.
-\begin{table}[H]
-  \caption{Ablation Study Results}
-  \centering
-  \begin{tabular}{lcc}
-    \toprule
-    Feature Configuration & Success Rate (Technical Tasks) & Avg. Reward \\
-    \midrule
-    Full Feature Set & \textbf{95.0\%} & -0.51 \\
-    Without Codeness & 71.0\% & -0.84 \\
-    Without Complexity & 85.5\% & -0.62 \\
-    \bottomrule
-  \end{tabular}
-\end{table}
+\subsection{Learning Dynamics and Ablation}
+As illustrated in Figure~\ref{fig:learning} (Left), the agent demonstrates rapid convergence within 500 steps. The feature ablation study (Figure~\ref{fig:learning} Right) confirms that removing the "Codeness" feature leads to a 24\% drop in technical task reliability.
 
-\subsection{Visual Analysis: Reward Convergence}
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.7\textwidth]{average_reward.png}
-  \caption{Cumulative Average Reward: Demonstrating the agent's ability to "unlearn" high-risk strategies in early stages.}
+  \includegraphics[width=0.48\textwidth]{average_reward.png}
+  \includegraphics[width=0.48\textwidth]{ablation_study.png}
+  \caption{Left: Cumulative Average Reward (Learning Curve). Right: Feature importance via ablation analysis.}
+  \label{fig:learning}
 \end{figure}
 
-\section{Discussion: The Sim2Real Gap and Interpretability}
-
-\subsection{Sim2Real Transferability}
-Validation against the live \textbf{Gemini 1.5, GPT-4o-mini, and Claude 3.5 Haiku} APIs confirms that the policy learned in simulation effectively transfers to real-world environments. The agent achieved a \textbf{92.0\% success rate} on live traffic, proving that $O(d^2)$ routing is resilient to heterogeneous API response behaviors and network jitters.
+\section{Discussion: Interpretability and Security}
 
 \subsection{Explainable AI: Feature-Action Correlation}
-A core advantage of the LinUCB approach over "black-box" neural methods is transparency. By visualizing the learned $\theta$ weights via a **Heatmap** (see Figure 2), we observe emergent task-awareness:
-\begin{itemize}
-    \item \textbf{Codeness vs. Aggression}: The agent assigns strong negative weights to the "Codeness" feature for Arm 2. This proves the system has autonomously learned that technical syntax is intolerant to POS-based stripping.
-    \item \textbf{Length vs. Efficiency}: High positive weights for the "Length" feature on Arm 1 suggest the agent prioritizes structural minimization for long, repetitive prompts to maximize token economy without semantic loss.
-\end{itemize}
+Transparency is achieved by visualizing the learned $\theta$ weights via a **Heatmap** (Figure~\ref{fig:heatmap}). We observe that the agent assigns strong negative weights to technical features for aggressive arms, prioritizing logic integrity.
 
 \begin{figure}[H]
   \centering
-  % NOTE TO USER: Upload your heatmap screenshot as 'heatmap.png' to Overleaf
-  % \includegraphics[width=0.8\textwidth]{heatmap.png}
-  \fbox{\rule{0pt}{2in} \rule{0.8\linewidth}{0pt}} % Placeholder box if image is missing
-  \caption{Learned $\theta$ Weights Heatmap: Visualizing the contextual bandit's task-aware decision logic. Negative weights (blue) indicate avoidance, while positive weights (red) indicate preference.}
+  \includegraphics[width=0.7\textwidth]{heatmap.png}
+  \caption{Learned $\theta$ Weights Heatmap: Negative weights (blue) indicate avoidance of risky compression for sensitive features.}
+  \label{fig:heatmap}
 \end{figure}
 
 \subsection{Qualitative Analysis: Case Study}
-To visualize the efficacy of the POS-aware strategy (Arm 2), we compare a technical prompt before and after extraction in Table 3.
+Table~\ref{tab:case_study} demonstrates the efficacy of the POS-aware strategy. 
 \begin{table}[H]
   \caption{Qualitative Comparison of POS-aware Extraction (Arm 2)}
+  \label{tab:case_study}
   \centering
-  \begin{tabular}{lp{8cm}}
+  \begin{tabular}{lp{8.5cm}}
     \toprule
     State & Prompt Content \\
     \midrule
-    \textbf{Raw} & "Please write a robust Python function that counts the frequency of each word in a given text file while ignoring common stopwords." \\
-    \textbf{Arm 2} & "write robust Python function counts frequency word given text file ignoring common stopwords" \\
+    \textbf{Raw} & "Please write a robust Python function that counts the frequency of each word in a text file..." \\
+    \textbf{Arm 2} & "write robust Python function counts frequency word text file" \\
     \midrule
-    \textbf{Outcome} & \textbf{Tokens Saved: 38\%} | \textbf{Semantic Fidelity: 1.0 (Identical LLM Output)} \\
+    \textbf{Outcome} & \textbf{Tokens Saved: 38\%} | \textbf{Semantic Fidelity: 1.0 (Identical Output)} \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-\subsection{Security: Guardrail Masking}
-A critical risk of prompt compression is "Defense Offloading," where safety instructions are pruned to save tokens. Our framework introduces \textbf{Guardrail Masking} via a \texttt{FREEZE\_MASK} token. When detected, the system overrides the bandit decision to Arm 0, ensuring that organizational security policies remain intact regardless of token economy goals.
+\subsection{Safety: OOD Guard and Guardrail Masking}
+To address the "Defense Offloading" risk, our system implements \textbf{Guardrail Masking} via a \texttt{FREEZE\_MASK} token. When detected, the \textbf{OOD Feature Guard} overrides the bandit decision to Arm 0, ensuring that organizational security policies remain intact regardless of token economy goals.
+
+\subsection{Cross-Category Performance}
+Figure~\ref{fig:dist} visualizes the strategy distribution, showing that the system favors Arm 0 for code blocks while aggressively compressing conversational summaries via Arm 2.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.65\textwidth]{token_saving_comparison.png}
+  \caption{Strategy selection distribution across diverse task categories.}
+  \label{fig:dist}
+\end{figure}
 
 \section{Conclusion}
-This paper introduced a numerically stable, $O(d^2)$ contextual bandit framework for task-aware prompt compression. By integrating **SBERT-based semantic alignment** and a **distributed Redis Parameter Server**, we demonstrated that intelligent routing can achieve a 93.5\% success rate while significantly reducing token overhead. Our findings prove that dynamic, closed-loop optimization is essential for resilient LLM infrastructure. Future work will investigate **Meta-Learning priors** to further accelerate cold-start convergence in novel task domains.
+This paper introduced a numerically stable, $O(d^2)$ contextual bandit framework for task-aware prompt compression. By integrating **SBERT-based semantic alignment** and a **distributed Redis Parameter Server**, we demonstrated that intelligent routing can achieve a 93.5\% success rate. Future work will investigate **Meta-Learning priors** to further accelerate cold-start convergence.
 
 \section*{References}
 \small
 \begin{enumerate}
-    \item Li, L. et al. (2010). A contextual-bandit approach to personalized news article recommendation. \textit{WWW '10}.
-    \item Jiang, H. et al. (2023). LLMLingua: Compressing Prompts for Accelerated Inference. \textit{arXiv:2310.05731}.
-    \item Reimers, N., \& Gurevych, I. (2019). Sentence-BERT. \textit{EMNLP-IJCNLP 2019}.
-    \item Vaswani, A. et al. (2017). Attention is all you need. \textit{NeurIPS 2017}.
+    \item Li, L., Chu, W., Langford, J., \& Schapire, R. E. (2010). A contextual-bandit approach to personalized news article recommendation. In \textit{Proceedings of the 19th international conference on World Wide Web} (pp. 661-670).
+    \item Jiang, H., Wu, Q., Luo, C., Pang, Y., Yang, J., \& Zhang, D. (2023). LLMLingua: Compressing Prompts for Accelerated Inference. \textit{arXiv preprint arXiv:2310.05731}.
+    \item Reimers, N., \& Gurevych, I. (2019). Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks. In \textit{Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing}.
+    \item Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A. N., ... \& Polosukhin, I. (2017). Attention is all you need. \textit{Advances in neural information processing systems}, 30.
+    \item Sherman, J., \& Morrison, W. J. (1950). Adjustment of an inverse matrix corresponding to a change in one element of a given matrix. \textit{The Annals of Mathematical Statistics}, 21(1), 124-127.
 \end{enumerate}
 
 \end{document}
