@@ -3,11 +3,13 @@ import pandas as pd
 import datetime
 import os
 
+
 class ExperimentDB:
     """
     Handles persistent storage of experiment logs and agent states using SQLite.
     Ensures robust data management beyond simple CSV files.
     """
+
     def __init__(self, db_path="results/experiments.db"):
         self.db_path = db_path
         os.makedirs(os.path.dirname(db_path), exist_ok=True)
@@ -48,8 +50,8 @@ class ExperimentDB:
         try:
             with sqlite3.connect(self.db_path) as conn:
                 df = pd.DataFrame([data])
-                df['timestamp'] = datetime.datetime.now().isoformat()
-                df.to_sql('logs', conn, if_exists='append', index=False)
+                df["timestamp"] = datetime.datetime.now().isoformat()
+                df.to_sql("logs", conn, if_exists="append", index=False)
         except Exception as e:
             print(f"⚠️ Database Log Error: {e}")
 

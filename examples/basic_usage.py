@@ -6,9 +6,10 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.interface import LinUCBCompressor
 
+
 def main():
     print("🧠 Adaptive Prompt Compressor - Basic Usage Example\n")
-    
+
     # Initialize the compressor
     # If no API key is provided, it defaults to SimulatedEnvironment for local testing
     api_key = os.getenv("GEMINI_API_KEY")
@@ -30,7 +31,9 @@ def calculate_fibonacci(n):
     compressed_code, strategy, _ = compressor.compress(code_prompt)
     print(f"Original Length: {len(code_prompt)} chars")
     print(f"Selected Strategy: {strategy}")
-    print(f"Tokens Saved: {100 - (len(compressed_code)/len(code_prompt))*100:.1f}%\n")
+    print(
+        f"Tokens Saved: {100 - (len(compressed_code) / len(code_prompt)) * 100:.1f}%\n"
+    )
 
     # Example 2: Conversational/Summarization Prompt
     # The agent should apply more aggressive POS-aware compression (Arm 2)
@@ -42,7 +45,10 @@ Could you please write a very detailed and robust Python function that counts th
     print(f"Original Length: {len(chat_prompt)} chars")
     print(f"Selected Strategy: {strategy}")
     print(f"Compressed Result:\n'{compressed_chat}'")
-    print(f"Tokens Saved: {100 - (len(compressed_chat)/len(chat_prompt))*100:.1f}%\n")
+    print(
+        f"Tokens Saved: {100 - (len(compressed_chat) / len(chat_prompt)) * 100:.1f}%\n"
+    )
+
 
 if __name__ == "__main__":
     main()
