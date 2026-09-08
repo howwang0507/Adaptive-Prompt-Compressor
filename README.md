@@ -1,7 +1,28 @@
 # Adaptive Prompt Compressor 🧠📉
 
+[![CI/CD Pipeline](https://github.com/howwang0507/Adaptive-Prompt-Compressor/actions/workflows/ci.yml/badge.svg)](https://github.com/howwang0507/Adaptive-Prompt-Compressor/actions)
+![Release](https://img.shields.io/badge/release-v1.1.0-brightgreen)
+![Python 3.10 | 3.11 | 3.12](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Code style: ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+![OpenAI Ready](https://img.shields.io/badge/OpenAI-GPT--4o%20Ready-412991?logo=openai&logoColor=white)
+
 **Dynamic LLM context optimization using Contextual Multi-Armed Bandits (LinUCB).**  
 Achieve **93.5% reliability** while reducing token costs by dynamically routing prompts through task-aware compression strategies. Optimized for real-time inference with **< 1ms latency**.
+
+```mermaid
+graph TD
+    A["Raw User / RAG Prompt"] --> B["12-D Feature Extraction (SBERT + Structural)"]
+    B --> C["LinUCB Contextual Bandit Policy (Sherman-Morrison O(d^2))"]
+    C -->|Code / Critical Syntax| D["Arm 0: Conservative (Preserve Code & Logic)"]
+    C -->|Moderate Complexity| E["Arm 1: Moderate (Whitespace & Syntax Pruning)"]
+    C -->|Conversational / Summarization| F["Arm 2: Aggressive (Stopword & Filler Elimination)"]
+    D & E & F --> G{"AST Syntax Guard"}
+    G -->|Valid| H["OpenAI GPT-4o / LLM Execution"]
+    G -->|Invalid| D
+    H --> I["Dual-Track Reward (Token Savings vs Semantic Fidelity)"]
+    I -->|Online Feedback| C
+```
 
 ---
 
@@ -66,20 +87,31 @@ uv run streamlit run src/app.py
 
 ### 💻 Basic Usage (Code Integration)
 
-Integrate the adaptive compressor into your Python project or MCP Server in just a few lines. See `examples/basic_usage.py` for more details.
+Integrate the adaptive compressor into your Python project, OpenAI middleware, or MCP Server in just a few lines:
 
+#### 1. OpenAI (GPT-4o / GPT-4o-mini) Native Integration
 ```python
-from src.interface import LinUCBCompressor
 import os
+from src.interface import LinUCBCompressor
 
-# Initialize (defaults to Simulation mode if no key provided)
-compressor = LinUCBCompressor(api_key=os.getenv("GEMINI_API_KEY"), model_name="gemini-1.5-flash")
+# Initialize compressor targeting OpenAI models
+# Automatically reads OPENAI_API_KEY from environment
+compressor = LinUCBCompressor(provider="openai", model_name="gpt-4o-mini")
 
-# Compress your prompt
-prompt = "def calculate_fibonacci(n): ..."
-compressed_text, strategy, metadata = compressor.compress(prompt)
+# Dynamic contextual compression
+prompt = "Could you please explain in deep detail how PostgreSQL MVCC works..."
+compressed_text, strategy, meta = compressor.compress(prompt)
 
-print(f"Strategy: {strategy} | Compressed: {compressed_text}")
+print(f"Routed Strategy: {strategy} (Arm {meta['arm']})")
+print(f"Compressed Prompt for OpenAI: {compressed_text}")
+```
+
+#### 2. Multi-Provider & Offline Simulation
+```python
+# Fully offline simulation mode (zero API key needed for testing)
+compressor = LinUCBCompressor(provider="simulation")
+compressed_code, strategy, _ = compressor.compress("def fib(n): return n if n < 2 else fib(n-1) + fib(n-2)")
+print(f"Code Strategy: {strategy} (Arm 0 - Preserves Syntax)")
 ```
 
 **2. Secret Management**
@@ -193,14 +225,31 @@ This project is built for mission-critical LLM deployments, featuring 'Temple-Le
 
 ---
 
-## 🏛️ Enterprise & Security Architecture (Roadmap)
+## 🗺️ Project Roadmap & Active Development (2026)
 
-For distributed, massive-scale deployments (e.g., K8s clusters serving millions of daily requests), the architecture is designed to support the following ceiling-level extensions:
+- [x] **v1.0.0**: Mathematical formulation of LinUCB Contextual Bandit, dual-track reward calculation, and offline simulation engine.
+- [x] **v1.1.0 (Current)**:
+  - 12-D Hybrid Neural-Structural feature representation ($R^{12}$) with SBERT embeddings.
+  - Abstract Syntax Tree (AST) hard syntax validation for technical code integrity.
+  - Native OpenAI GPT-4o & GPT-4o-mini environment integration.
+  - Model Context Protocol (MCP) server support (`mcp_server/`).
+  - Redis Parameter Server for asynchronous fleet learning.
+  - Automated CI/CD matrix testing across Python 3.10, 3.11, and 3.12.
+- [ ] **v1.2.0 (Target: Q3 2026)**:
+  - OpenAI Structured Outputs (JSON Schema) token pruning without breaking schema constraints.
+  - OpenAI Prompt Cache boundary optimization (aligning static prefix tokens for 50% discount).
+- [ ] **v2.0.0 (Target: Q4 2026)**:
+  - Long-context chunked compression for reasoning models (OpenAI o1/o3 series).
+  - Streaming prompt compression middleware with zero Time-To-First-Token (TTFT) degradation.
 
-- **Distributed Parameter Synchronization**: Transitioning from in-memory locks to a **Redis Parameter Server**. This allows hundreds of stateless worker pods to asynchronously push matrix incremental updates (using Redis atomic transactions) ensuring global fleet learning without locking bottlenecks.
-- **Adversarial Resilience (Guardrail Masking)**: LLM Prompt Injection attacks often try to overwrite system prompts. The compressor is designed to accept `System Instructions` that bypass the compression heuristic (Freeze Masking), ensuring that safety guardrails are never stripped out to save tokens.
-- **Zero-Shot Domain Adaptation (Meta-Learning)**: The `LinUCB` initialization supports injecting pre-trained `domain_priors`. For a new customer deploying in a specific domain (e.g., Medical Triage), the agent can be warm-started with pre-calculated $\theta$ matrices, avoiding the cold-start exploration penalty.
-- **Attention Sink Protection**: Integrating a "Position Sensitivity" feature dimension to protect the boundaries (Start/End) of the prompt, respecting the "Lost in the Middle" phenomenon observed in Deep Transformer architectures.
+---
+
+## 🤝 Community & Governance
+
+We welcome contributions from researchers and engineers across the open-source ecosystem!
+- **Contributing Guidelines**: See [CONTRIBUTING.md](CONTRIBUTING.md) for local dev setup and guidelines.
+- **Code of Conduct**: See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for community standards.
+- **Security Policy**: See [SECURITY.md](SECURITY.md) for vulnerability disclosure and AST safety boundaries.
 
 ---
 

@@ -1,7 +1,6 @@
 import sys
 import os
 import pandas as pd
-import datetime
 import numpy as np
 from tqdm import tqdm
 import json
@@ -11,7 +10,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.agent import LinUCB
 from src.environment import SimulatedEnvironment
-from src.utils import calculate_reward, get_semantic_similarity
+from src.utils import calculate_reward
 
 # --- Load Real-World Benchmark Data ---
 DATA_PATH = "data/neurips_benchmark_full.json"

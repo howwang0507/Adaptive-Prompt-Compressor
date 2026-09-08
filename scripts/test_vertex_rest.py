@@ -48,7 +48,7 @@ def test_vertex_rest():
         try:
             with urllib.request.urlopen(req) as response:
                 result = json.loads(response.read().decode("utf-8"))
-                print(f"✅ SUCCESS! Response:")
+                print("✅ SUCCESS! Response:")
                 try:
                     print(result['candidates'][0]['content']['parts'][0]['text'])
                     # If we succeed, we can break and use this!

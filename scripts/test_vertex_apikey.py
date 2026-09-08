@@ -1,4 +1,3 @@
-import os
 import json
 import urllib.request
 import urllib.error
@@ -28,7 +27,7 @@ def test_vertex_api_key(api_key):
             try:
                 with urllib.request.urlopen(req) as response:
                     result = json.loads(response.read().decode("utf-8"))
-                    print(f"✅ SUCCESS! Response:")
+                    print("✅ SUCCESS! Response:")
                     try:
                         print(result['candidates'][0]['content']['parts'][0]['text'])
                         return

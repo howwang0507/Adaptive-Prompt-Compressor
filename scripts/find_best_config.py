@@ -2,7 +2,6 @@ import sys
 import os
 import pandas as pd
 import numpy as np
-from tqdm import tqdm
 import json
 
 # Add project root to path
@@ -48,9 +47,12 @@ def run_grid_search():
                     res = env.execute_request(data["text"], arm)
                     
                     # Simulated Semantic Score
-                    if arm == 0: sem = 1.0
-                    elif arm == 1: sem = np.random.normal(0.96, 0.02)
-                    else: sem = np.random.normal(0.88, 0.05)
+                    if arm == 0:
+                        sem = 1.0
+                    elif arm == 1:
+                        sem = np.random.normal(0.96, 0.02)
+                    else:
+                        sem = np.random.normal(0.88, 0.05)
                     sem = max(min(sem, 1.0), 0.0)
 
                     reward, saving, _, _ = calculate_reward(

@@ -1,7 +1,5 @@
 import os
-import vertexai
 from google.cloud import aiplatform
-import json
 
 def list_models():
     key_path = "/Users/wmh/Downloads/gen-lang-client-0752774059-73ec68aeb54b.json"

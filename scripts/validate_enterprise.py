@@ -76,7 +76,7 @@ class EnterpriseAgentPlatformEnv(BaseLLMEnvironment):
 def run_enterprise_validation(api_key):
     # Using your "Default Gemini Project" ID seen in screenshot
     project_id = "gen-lang-client-0752774059"
-    print(f"🚀 Starting Enterprise Agent Platform Validation...")
+    print("🚀 Starting Enterprise Agent Platform Validation...")
     print(f"Project: {project_id} | Region: us-central1\n")
     
     env = EnterpriseAgentPlatformEnv(api_key, project_id)

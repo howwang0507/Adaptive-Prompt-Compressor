@@ -11,7 +11,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.agent import LinUCB
 from src.environment import RealLLMEnvironment
-from src.utils import calculate_reward, get_semantic_similarity
+from src.utils import calculate_reward
 
 # --- Load Real-World Benchmark Data ---
 DATA_PATH = "data/neurips_benchmark_full.json"
@@ -26,7 +26,6 @@ else:
 # to avoid massive API costs/rate limits, but enough to prove statistical significance.
 SAMPLE_SIZE = 50 
 np.random.seed(42)
-import numpy as np
 validation_indices = np.random.choice(len(REAL_DATA), min(SAMPLE_SIZE, len(REAL_DATA)), replace=False)
 VALIDATION_DATA = [REAL_DATA[i] for i in validation_indices]
 

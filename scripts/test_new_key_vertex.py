@@ -1,12 +1,9 @@
 import sys
 import os
-import pandas as pd
 from tqdm import tqdm
 import json
 import time
 import numpy as np
-from google.cloud import aiplatform
-import vertexai
 from vertexai.generative_models import GenerativeModel, HarmCategory, HarmBlockThreshold
 
 # Add project root to path
@@ -81,7 +78,7 @@ class CustomVertexEnv(BaseLLMEnvironment):
 def run_vertex_validation(api_key):
     # Set the key in the environment just in case it's picked up by the underlying library
     os.environ["GEMINI_API_KEY"] = api_key
-    print(f"🚀 Initiating Validation using Vertex SDK structure...")
+    print("🚀 Initiating Validation using Vertex SDK structure...")
     
     env = CustomVertexEnv(api_key)
     

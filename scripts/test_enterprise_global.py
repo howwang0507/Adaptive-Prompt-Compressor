@@ -1,4 +1,3 @@
-import os
 import json
 import urllib.request
 import urllib.error
@@ -11,7 +10,7 @@ def test_enterprise_global(api_key):
     # Models explicitly mentioned in the Enterprise docs
     models = ["gemini-1.5-flash", "gemini-2.0-flash-001", "gemini-2.5-flash"]
     
-    print(f"🚀 Precision Test: Enterprise Global Endpoint")
+    print("🚀 Precision Test: Enterprise Global Endpoint")
     print(f"Project: {project_id} | Location: {location}\n")
     
     for model_id in models:

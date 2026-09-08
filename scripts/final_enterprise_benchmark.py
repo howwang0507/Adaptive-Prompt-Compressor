@@ -85,7 +85,7 @@ class FinalEnterpriseEnv(BaseLLMEnvironment):
         }
 
 def run_final_benchmark(api_key):
-    print(f"🚀 Launching Final Enterprise Validation (Gemini 2.5 Flash @ Global)")
+    print("🚀 Launching Final Enterprise Validation (Gemini 2.5 Flash @ Global)")
     env = FinalEnterpriseEnv(api_key)
     
     modes = ["Baseline", "LinUCB_Optimum"]

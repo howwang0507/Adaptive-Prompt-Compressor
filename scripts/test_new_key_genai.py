@@ -78,7 +78,7 @@ class ModernGenAIEnv(BaseLLMEnvironment):
         }
 
 def run_real_api_validation(api_key):
-    print(f"🚀 Initiating Validation using modern `google-genai` SDK...")
+    print("🚀 Initiating Validation using modern `google-genai` SDK...")
     
     env = ModernGenAIEnv(api_key)
     

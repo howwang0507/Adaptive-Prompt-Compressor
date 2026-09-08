@@ -1,7 +1,6 @@
 import os
 import vertexai
 from vertexai.generative_models import GenerativeModel
-import json
 
 def test_vertex():
     key_path = "/Users/wmh/Downloads/gen-lang-client-0752774059-73ec68aeb54b.json"

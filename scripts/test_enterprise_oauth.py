@@ -1,4 +1,3 @@
-import os
 import json
 import urllib.request
 import urllib.error
@@ -30,7 +29,7 @@ def test_enterprise_oauth():
 
     url = f"https://{location}-aiplatform.googleapis.com/v1/projects/{project_id}/locations/{location}/publishers/google/models/{model_id}:generateContent"
     
-    print(f"🚀 Testing Enterprise API via OAuth 2.0 Bearer Token...")
+    print("🚀 Testing Enterprise API via OAuth 2.0 Bearer Token...")
     print(f"Project: {project_id} | Model: {model_id}")
 
     headers = {

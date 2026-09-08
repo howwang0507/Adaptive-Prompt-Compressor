@@ -1,7 +1,6 @@
 import pandas as pd
 from datasets import load_dataset
 import os
-import json
 
 def download_and_save():
     print("📥 Downloading GSM8K (Math Reasoning)...")

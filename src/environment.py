@@ -110,14 +110,26 @@ class BaseLLMEnvironment:
             return False
 
     def compress_prompt(self, text, arm):
-        # ... (rest of method same, adding multilingual check)
+        """Compresses prompt text based on arm index:
+        - Arm 0: Conservative (Preserve exact original text, zero risk)
+        - Arm 1: Moderate (Whitespace normalization & mild cleanup)
+        - Arm 2: Aggressive (Stopword & filler token pruning)
+        """
+        if not text:
+            return ""
+        if arm == 0:
+            return text
+        if arm == 1:
+            return re.sub(r"\s+", " ", text).strip()
         if arm == 2:
-            # Detect non-English (simple heuristic)
-            if any(ord(c) > 127 for c in text) and HAS_NLTK:
-                # Fallback for multilingual: Entropy-based pruning or basic stopword
+            # Multilingual check
+            if any(ord(c) > 127 for c in text):
                 words = text.split()
                 return " ".join([w for w in words if len(w) > 1])
-            # ... (NLTK POS logic)
+            words = text.split()
+            kept_words = [w for w in words if w.lower() not in self.stop_words]
+            return " ".join(kept_words) if kept_words else text
+        return text
 
 
 class RealLLMEnvironment(BaseLLMEnvironment):
