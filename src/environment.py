@@ -1,8 +1,22 @@
-import time
-import re
 import os
+import re
+import time
+import warnings
 import numpy as np
-import google.generativeai as genai
+
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=FutureWarning)
+    try:
+        import google.generativeai as genai
+        HAS_GENAI = True
+    except ImportError:
+        HAS_GENAI = False
+
+try:
+    import tiktoken
+    HAS_TIKTOKEN = True
+except ImportError:
+    HAS_TIKTOKEN = False
 
 try:
     import openai
@@ -234,10 +248,25 @@ class OpenAIEnvironment(BaseLLMEnvironment):
         self.client = openai.OpenAI(api_key=api_key)
         self.model_name = model_name
 
+    def count_tokens(self, text: str) -> int:
+        if not text:
+            return 0
+        if HAS_TIKTOKEN:
+            try:
+                enc = tiktoken.encoding_for_model(self.model_name)
+                return len(enc.encode(text))
+            except Exception:
+                try:
+                    enc = tiktoken.get_encoding("cl100k_base")
+                    return len(enc.encode(text))
+                except Exception:
+                    pass
+        return len(text) // 4
+
     def execute_request(self, text, arm):
-        base_tokens = len(text) // 4  # Approximation
+        base_tokens = self.count_tokens(text)
         compressed_text = self.compress_prompt(text, arm)
-        comp_tokens = len(compressed_text) // 4
+        comp_tokens = self.count_tokens(compressed_text)
 
         start_time = time.time()
         answer, is_valid = "", True
@@ -254,6 +283,8 @@ class OpenAIEnvironment(BaseLLMEnvironment):
                     max_tokens=150,
                 )
                 answer = response.choices[0].message.content
+                if hasattr(response, "usage") and response.usage:
+                    comp_tokens = response.usage.prompt_tokens
                 break
             except Exception as e:
                 err_msg = str(e)

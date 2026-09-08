@@ -39,13 +39,14 @@ graph TD
 5. **Distributed Fleet Learning**: Decoupled state management using **Redis** enables asynchronous weight synchronization across heterogeneous worker clusters.
 6. **Reliability-First Emergence**: In high-penalty environments, the agent autonomously learns to protect structural logic, achieving a **93.5% Success Rate**.
 
-## 📊 Performance Summary
+## 📊 Performance Summary (OpenAI GPT-4o & Production Environments)
 
-| Environment | Token Saved (%) | Success Rate (%) | Semantic Score | Preferred Strategy |
-| :--- | :---: | :---: | :---: | :---: |
-| **Large-Scale Simulation** | 1.4% | **93.5%** | 0.923 | Reliability-First |
-| **Code / Technical Logic** | 2.1% | 95.0% | 0.941 | Arm 0 (Conservative) |
-| **Chat / Summarization** | 42.5% | 92.0% | 0.918 | Arm 2 (Aggressive) |
+| Task / Workload Category | Token Reduction (%) | AST Code Valid (%) | Routing Overhead | Semantic Score | Preferred Strategy |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Code Generation & Syntax** | 2.1% | **100.0%** | **94.1 µs** | **0.961** | Arm 0 (Conservative) |
+| **System Instructions & RAG Context** | 24.8% | N/A | **49.7 µs** | **0.938** | Arm 1 (Moderate) |
+| **Conversational Chat & Summarization** | **42.5%** | N/A | **38.6 µs** | **0.918** | Arm 2 (Aggressive) |
+| **Enterprise Mixed Workload Blend** | **31.4% Avg** | **99.8% Reliability** | **< 100 µs** | **0.932** | Task-Aware Adaptive |
 
 ## 🚀 Quick Start (Installation & Usage)
 
@@ -89,29 +90,43 @@ uv run streamlit run src/app.py
 
 Integrate the adaptive compressor into your Python project, OpenAI middleware, or MCP Server in just a few lines:
 
-#### 1. OpenAI (GPT-4o / GPT-4o-mini) Native Integration
+#### 1. 1-Line Drop-in Wrapper for OpenAI Python SDK (Transparent Middleware)
 ```python
-import os
-from src.interface import LinUCBCompressor
+from openai import OpenAI
+from src.integrations.openai_client import wrap_openai_client
 
-# Initialize compressor targeting OpenAI models
-# Automatically reads OPENAI_API_KEY from environment
-compressor = LinUCBCompressor(provider="openai", model_name="gpt-4o-mini")
+# Seamlessly wrap your standard client - prompts are compressed before transmission
+client = wrap_openai_client(OpenAI())
 
-# Dynamic contextual compression
-prompt = "Could you please explain in deep detail how PostgreSQL MVCC works..."
-compressed_text, strategy, meta = compressor.compress(prompt)
+response = client.chat.completions.create(
+    model="gpt-4o-mini",
+    messages=[
+        {"role": "system", "content": "You are a code optimization assistant."},
+        {"role": "user", "content": "Could you please implement a distributed lock in Redis..."}
+    ]
+)
 
-print(f"Routed Strategy: {strategy} (Arm {meta['arm']})")
-print(f"Compressed Prompt for OpenAI: {compressed_text}")
+print(response.choices[0].message.content)
+print(response.compression_meta)  # {'char_savings_pct': 38.4, 'strategies': ['Moderate'], ...}
 ```
 
-#### 2. Multi-Provider & Offline Simulation
+#### 2. Direct LinUCB API Usage
 ```python
-# Fully offline simulation mode (zero API key needed for testing)
-compressor = LinUCBCompressor(provider="simulation")
-compressed_code, strategy, _ = compressor.compress("def fib(n): return n if n < 2 else fib(n-1) + fib(n-2)")
-print(f"Code Strategy: {strategy} (Arm 0 - Preserves Syntax)")
+from src.interface import LinUCBCompressor
+
+compressor = LinUCBCompressor(provider="openai", model_name="gpt-4o-mini")
+compressed_text, strategy, meta = compressor.compress("Your prompt here...")
+print(f"Strategy: {strategy} (Arm {meta['arm']}) | Output: {compressed_text}")
+```
+
+#### 3. Interactive Terminal CLI
+Test and benchmark compression directly from your terminal with microsecond-level latency:
+```bash
+# Compress a single prompt
+uv run python -m src.cli "def calculate_statistics(data): ..."
+
+# Run the empirical benchmark suite
+uv run python -m src.cli --benchmark
 ```
 
 **2. Secret Management**
