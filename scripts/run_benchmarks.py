@@ -38,7 +38,7 @@ def run_benchmark(api_key=None):
     for mode in mode_names:
         print(f"\n🚀 Running mode: {mode}")
         # Updated to 12 features for Neural Bandit
-        agent = LinUCB(n_arms=3, n_features=12) if mode == "LinUCB" else None
+        agent = LinUCB(n_arms=3, n_features=12, alpha=1.669) if mode == "LinUCB" else None
         cumulative_reward = 0
 
         for i, data in enumerate(tqdm(BENCHMARK_DATA)):

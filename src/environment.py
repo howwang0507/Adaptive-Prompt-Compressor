@@ -105,6 +105,8 @@ class BaseLLMEnvironment:
             ast.parse(code_text)
             return True
         except Exception:
+            from src.telemetry_logger import track_ast_failure
+            track_ast_failure()
             return False
 
     def compress_prompt(self, text, arm):
@@ -156,7 +158,7 @@ class RealLLMEnvironment(BaseLLMEnvironment):
         try:
             comp_tokens = self.model.count_tokens(compressed_text).total_tokens
         except Exception:
-            comp_tokens = len(compressed_text) // 4
+            comp_tokens = len(compressed_text) // 4 if compressed_text else 0
 
         start_time = time.time()
         answer, is_valid = "", True

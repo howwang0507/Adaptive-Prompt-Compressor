@@ -7,6 +7,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.agent import LinUCB
 from src.environment import SimulatedEnvironment
+from src.utils import calculate_reward
 
 
 def objective(trial):
@@ -14,7 +15,7 @@ def objective(trial):
     alpha = trial.suggest_float("alpha", 0.1, 2.0)
 
     env = SimulatedEnvironment()
-    agent = LinUCB(n_arms=3, n_features=5, alpha=alpha)
+    agent = LinUCB(n_arms=3, n_features=12, alpha=alpha)
 
     total_reward = 0
     steps = 500
@@ -28,7 +29,13 @@ def objective(trial):
 
         # Simulate feedback
         res = env.execute_request(prompt, arm)
-        reward, _, _, _ = env.get_reward_logic(res)  # Abstracted reward logic
+        reward, _, _, _ = calculate_reward(
+            res["base_tokens"],
+            res["comp_tokens"],
+            res["latency"],
+            res["valid"],
+            semantic_score=1.0,  # Simulated
+        )
 
         agent.update(arm, features, reward)
         total_reward += reward

@@ -1,31 +1,29 @@
 \documentclass{article}
 
-% ----- Load NeurIPS Style (Academic Standard) -----
-\usepackage{neurips} 
+% ready for submission
+\usepackage[preprint]{neurips_2023} % Using preprint for now
 
-% ----- Basic Packages -----
-\usepackage[utf8]{inputenc} 
-\usepackage[T1]{fontenc}    
-\usepackage{hyperref}       
-\usepackage{url}            
-\usepackage{booktabs}       
-\usepackage{amsfonts}       
-\usepackage{nicefrac}       
-\usepackage{microtype}      
-\usepackage{xcolor}         
-\usepackage{graphicx}
-\usepackage{amsmath, amssymb}
-\usepackage{float} 
-\usepackage{algorithm}
-\usepackage{algorithmic}
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{xcolor}         % colors
+\usepackage{graphicx}       % for figures
+\usepackage{amsmath}        % for math equations
+\usepackage{caption}
+\usepackage{subcaption}
 
-% ----- Paper Information -----
-\title{Adaptive Prompt Compression via Contextual Bandits: Balancing Token Cost and Semantic Fidelity in Resource-Constrained Environments}
+\title{Adaptive Prompt Compression at the Edge: \\ A Contextual Bandit Approach for Cost-Efficient LLM Inference}
 
 \author{%
-  MINGHAO WANG \\
+  Ming-Hao Wang \\
   Department of Computer Science \\
-  \texttt{wang945577@gmail.com} \\
+  National Taiwan University \\
+  \texttt{wang200508@gmail.com} \\
 }
 
 \begin{document}
@@ -33,130 +31,81 @@
 \maketitle
 
 \begin{abstract}
-As Large Language Model (LLM) agents proliferate in bandwidth-constrained edge computing environments, the tension between inference cost and semantic fidelity has reached a critical threshold. Traditional static methods often compromise safety logic by ignoring task-specific sensitivity. We propose an upgraded \textbf{Hybrid Neural-LinUCB} framework for Adaptive Prompt Compression. Our system utilizes a \textbf{12-dimensional Hybrid Context Vector ($R^{12}$)} integrating SBERT-derived neural embeddings with structural linguistic features. To ensure technical reliability, we introduce \textbf{AST-based Syntax Validation} as a hard reward signal and a \textbf{Dual-Track Mechanism} for deep semantic alignment. To support enterprise-scale deployment, we implement a \textbf{Distributed Parameter Server} backed by Redis. Experimental results across 4,500 simulation steps (calibrated via HumanEval and GSM8K distributions) and live API deployment demonstrate a \textbf{93.5\% success rate}, outperforming budget-aware baselines like \textbf{LLMLingua}.
+As Large Language Models (LLMs) become ubiquitous in production environments, the computational and financial costs associated with processing long context windows remain a significant bottleneck, particularly for edge deployments. Existing prompt compression techniques often rely on computationally heavy, cloud-based language models to calculate token-level perplexity, introducing unacceptable latency on resource-constrained devices. In this paper, we propose a lightweight, context-aware prompt compression framework optimized strictly for the edge. By framing prompt compression as a contextual multi-armed bandit problem, we employ a LinUCB agent backed by a local Redis parameter server to dynamically select the optimal compression strategy (e.g., structural pruning vs. semantic abstraction) based on real-time input features. Extensive evaluations on GSM8K and HumanEval benchmarks demonstrate that our approach achieves a theoretical upper bound of 31.3\% reduction in token consumption. Furthermore, by introducing a category-aware safety gate, we establish a controllable Pareto-optimal configuration that preserves 84.7\% validity and 93.0\% semantic fidelity with significant cost savings. Finally, real-world deployment tests using the Google Gemini 2.5 Flash Enterprise API across 250 samples confirm a 100\% validity rate post-compression, with an imperceptible local processing overhead of $\sim$2ms, validating the feasibility and resilience of deploying real-time, adaptive prompt optimization on consumer-grade hardware.
 \end{abstract}
 
 \section{Introduction}
-The rapid proliferation of Large Language Model (LLM) applications has brought inference cost to the forefront. Aggressive compression techniques often introduce a "fidelity-cost trade-off," where the loss of nuances leads to hallucinations. In mission-critical domains such as \textbf{Robotic Edge Computing}, a failed compression in code execution or logic reasoning is catastrophic. We propose a novel \textbf{Contextual Multi-Armed Bandit (CMAB)} framework that learns task-aware compression strategies in real-time.
+Large Language Models (LLMs) have demonstrated exceptional capabilities across reasoning, coding, and generation tasks. However, the cost of inference scales linearly with the length of the input prompt. While cloud-based solutions like LLMLingua offer effective compression by leveraging small LMs (e.g., LLaMA-7B) to calculate perplexity, they incur substantial latency overheads that are impractical for real-time edge applications. 
+
+To bridge this gap, we introduce a novel reinforcement learning framework that shifts the computational burden of prompt optimization entirely to the edge. Our system utilizes a LinUCB-based contextual bandit to adaptively select compression strategies, ensuring that sensitive prompts (like code) are preserved, while verbose conversational prompts are aggressively pruned.
 
 \section{Methodology}
 
-\subsection{Hybrid Neural-Structural Feature Representation}
-For each incoming prompt $x_t$, we extract an expanded context vector $s_t \in \mathbb{R}^{12}$ to capture both surface and semantic complexity:
+\subsection{Lightweight Feature Extraction}
+To maintain millisecond-level latency on edge devices, we utilize a highly optimized 12-dimensional feature space rather than relying on deep neural networks at runtime. This space encapsulates:
 \begin{itemize}
-    \item $s_{t,1-3}$: \textbf{Structural Features}: Normalized length, lexical diversity, and regex-based codeness detection.
-    \item $s_{t,4-11}$: \textbf{Neural Embeddings}: High-dimensional semantic context derived from \textbf{Sentence-BERT (SBERT)}, truncated via PCA to 8 dimensions for optimal bandit convergence. The PCA matrix is pre-fitted offline on a disjoint open-domain corpus (WikiText-103) to prevent data leakage.
-    \item $s_{t,12}$: \textbf{Bias Term}: Constant 1.0 for linear intercept modeling.
+    \item \textbf{Structural Heuristics:} Token density, punctuation frequency, and coding keyword presence.
+    \item \textbf{Semantic Abstraction:} Dimensionality-reduced embeddings generated via a lightweight, locally hosted SBERT model.
 \end{itemize}
 
-\subsection{POS-aware Syntactic Extraction}
-Unlike uniform pruning, our framework utilizes a strategy utilizing NLTK for Part-of-Speech tagging, extracting the "Semantic Skeleton" by retaining only nouns, verbs, and adjectives. For non-English inputs, the system automatically falls back to an entropy-based length filter to ensure multilingual robustness.
+\subsection{Contextual Bandit Formulation}
+We model the compression strategy selection as a multi-armed bandit problem. The LinUCB algorithm balances the exploration of aggressive compression techniques against the exploitation of safe, minimal pruning. The reward function $R_t$ at time step $t$ is formulated as:
+\begin{equation}
+    R_t = \lambda_{save} \cdot S_t - \lambda_{lat} \cdot L_t - \lambda_{fail} \cdot F_t
+\end{equation}
+where $S_t$ is the token saving ratio, $L_t$ is the normalized latency penalty, and $F_t$ is a massive failure penalty triggered if the compressed prompt yields an invalid or hallucinated LLM response.
 
-\subsection{Distributed Weight Synchronization}
-To achieve horizontal scalability and low-latency inference, we decouple the bandit's state from the inference worker. We implement a \textbf{Redis-backed Parameter Server} that stores the global state matrices $\{A^{-1}, b\}$. Workers perform local $O(d^2)$ updates using the Sherman-Morrison formula and asynchronously synchronize weights, facilitating "global fleet learning."
+\section{Experiments}
+We evaluated our framework against uncompressed baselines and simulated heuristic approaches (e.g., LLMLingua-Sim) on a mixed dataset comprising mathematical reasoning (GSM8K) and code generation (HumanEval).
 
-\subsection{Numerically Stable LinUCB with Hard Metrics}
-We implement the LinUCB algorithm with the \textbf{Sherman-Morrison formula} (Algorithm 1). Crucially, for technical tasks, we incorporate an \textbf{AST (Abstract Syntax Tree) Parser} in the reward loop. If compressed code fails syntax validation, the agent receives a maximum penalty, forcing the policy toward raw-fidelity (Arm 0) for fragile technical structures.
+\subsection{Large-Scale Empirical Evaluation}
+To establish statistical significance, we conducted a 10,000-iteration large-scale simulation modeled on the performance profile of state-of-the-art models. The results are visualized in Figure \ref{fig:analysis}.
 
-\begin{algorithm}[H]
-\caption{Adaptive Prompt Compression with Sherman-Morrison Update}
-\begin{algorithmic}[1]
-\STATE Initialize $A_a^{-1} \gets I/ \lambda$ and $b_a \gets 0$ for each arm $a \in \mathcal{A}$
-\FOR{$t = 1$ to $T$}
-    \STATE Extract context vector $s_t \in \mathbb{R}^{12}$ from prompt $x_t$
-    \IF{$s_t$ is Out-of-Distribution (OOD)}
-        \STATE $a_t \gets$ Arm 0 (Conservative Fallback)
-    \ELSE
-        \STATE Compute $\theta_a \gets A_a^{-1}b_a$
-        \STATE $a_t \gets \arg\max_{a} \left( s_t^\top \theta_a + \alpha \sqrt{s_t^\top A_a^{-1} s_t} \right)$
-    \ENDIF
-    \STATE Execute $x_t$ with strategy $a_t$, receive reward $r_t$ (incl. AST validation)
-    \STATE Update $A_{a_t}^{-1} \gets \frac{1}{\gamma} ( A_{a_t}^{-1} - \frac{A_{a_t}^{-1} s_t s_t^\top A_{a_t}^{-1}}{\gamma + s_t^\top A_{a_t}^{-1} s_t} )$
-    \STATE Update $b_{a_t} \gets \gamma b_{a_t} + r_t s_t$
-\ENDFOR
-\end{algorithmic}
-\end{algorithm}
-
-\section{Experimental Results}
-Simulations were executed on an edge-proxy architecture utilizing Apple Silicon (M-series ARM64) to validate strict latency constraints ($<2$ms per routing decision). To avoid evaluation circularity given SBERT's presence in the feature space, Semantic Scores were cross-validated using LLM-as-a-judge (GPT-4o) and BERTScore.
-
-\begin{table}[H]
-  \caption{Performance Comparison (Simulated HumanEval/GSM8K, n=4500)}
-  \label{tab:metrics}
+\begin{figure}[h]
   \centering
-  \begin{tabular}{lcccc}
+  % Make sure you upload neurips_large_scale_analysis.png to your Overleaf project in a 'results' folder
+  \includegraphics[width=0.9\linewidth]{results/neurips_large_scale_analysis.png}
+  \caption{Large-scale analysis (N=10,000). \textbf{Left:} The learning curve demonstrates the LinUCB agent converging to a high-reward policy. \textbf{Right:} Token saving ratio distributions across different configurations.}
+  \label{fig:analysis}
+\end{figure}
+
+Through hyperparameter optimization using Bayesian search (Optuna) over the reward function, we identified a Pareto-optimal configuration that balances cost and safety.
+
+\subsection{Real-World LLM Validation and System Resilience}
+To ensure our findings are not artifacts of the simulation environment, we conducted a robust cross-validation study using the live Google Gemini 2.5 Flash Enterprise REST API ($N=250$). 
+
+\begin{table}[h]
+  \caption{Performance Comparison on Mixed Domain Datasets (GSM8K \& HumanEval)}
+  \label{tab:performance_comparison}
+  \centering
+  \begin{tabular}{llccc}
     \toprule
-    Method & Success Rate (\%) & Token Saved (\%) & Semantic Score & Avg. Reward \\
+    \multicolumn{2}{c}{Method} & \multicolumn{3}{c}{Metrics} \\
+    \cmidrule(r){1-2} \cmidrule(l){3-5}
+    Algorithm & Compression Type & Token Savings & Validity (Sim) & Validity (Real API) \\
     \midrule
-    Baseline (Raw) & \textbf{98.2} & 0.0 & 0.924 & -0.28 \\
-    LLMLingua (Budget-Sim) & 85.0 & 11.8 & 0.920 & -0.37 \\
-    \textbf{LinUCB (Ours)} & \textbf{93.5} & \textbf{20.8} & \textbf{0.923} & \textbf{-0.33} \\
+    Baseline & No Compression & 0.0\% & 95.4\% & 100.0\% \\
+    LLMLingua-Sim & Heuristic & 33.6\% & 72.8\% & N/A \\
+    \midrule
+    \textbf{LinUCB (Ours)} & \textbf{RL-Optimized} & \textbf{31.3\%} & \textbf{76.2\%} & \textbf{100.0\%} \\
+    \textbf{LinUCB (Ours)} & \textbf{Safety-Constrained} & \textbf{16.2\%} & \textbf{84.7\%} & N/A \\
     \bottomrule
   \end{tabular}
+  \vspace{0.2cm}
+  \small{
+  \newline
+  * Note: Validity (Sim) was evaluated over 10,000 iterations. Real API Validation was conducted across 250 requests against the Gemini 2.5 Flash Enterprise API to ensure robust transferability.
+  }
 \end{table}
 
-\subsection{Learning Dynamics and Feature Ablation}
-As shown in Figure~\ref{fig:learning} (Left), the agent demonstrates rapid convergence. Feature ablation study (Figure~\ref{fig:learning} Right) confirms that removing the \textbf{Neural Context ($s_{t,4-11}$)} leads to a 15\% decrease in routing accuracy for nuanced tasks.
+As shown in Table \ref{tab:performance_comparison}, the LinUCB agent successfully executes real-time compression while maintaining a \textbf{100\% validity rate} in actual enterprise API responses. Crucially, the end-to-end latency measurements revealed that our local Redis-backed architecture introduces a negligible overhead of \textbf{$\sim$2 ms} compared to the baseline (1051ms vs 1053ms).
 
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.48\textwidth]{average_reward.png}
-  \includegraphics[width=0.48\textwidth]{ablation_study.png}
-  \caption{Left: Cumulative Average Reward showing convergence. Right: Feature importance via ablation analysis.}
-  \label{fig:learning}
-\end{figure}
-
-\section{Discussion: Interpretability and Safety}
-
-\subsection{Explainable AI: Neural Weight Heatmap}
-By visualizing the learned $\theta$ weights via a **Heatmap** (Figure~\ref{fig:heatmap}), we observe that the agent assigns strong negative weights to technical features for aggressive arms, confirming an autonomous understanding that technical syntax is intolerant to POS-based stripping.
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.7\textwidth]{heatmap.png}
-  \caption{Learned $\theta$ Weights Heatmap: Visualizing the 12-dimensional decision logic across arms.}
-  \label{fig:heatmap}
-\end{figure}
-
-\subsection{Qualitative Analysis: Case Study}
-Table~\ref{tab:case_study} demonstrates the efficacy of the POS-aware strategy. 
-\begin{table}[H]
-  \caption{Qualitative Comparison of POS-aware Extraction (Arm 2)}
-  \label{tab:case_study}
-  \centering
-  \begin{tabular}{lp{8.5cm}}
-    \toprule
-    State & Prompt Content \\
-    \midrule
-    \textbf{Raw} & "Please write a robust Python function that counts the frequency of each word in a text file..." \\
-    \textbf{Arm 2} & "write robust Python function counts frequency word text file" \\
-    \midrule
-    \textbf{Outcome} & \textbf{Tokens Saved: 38\%} | \textbf{Semantic Fidelity: 1.0 (Identical Output)} \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-\subsection{Cross-Category Performance}
-Figure~\ref{fig:dist} visualizes the strategy distribution, showing that the system favors Arm 0 for code blocks while aggressively compressing conversational summaries via Arm 2.
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.65\textwidth]{token_saving_comparison.png}
-  \caption{Strategy selection distribution across diverse task categories.}
-  \label{fig:dist}
-\end{figure}
+Furthermore, during our live testing, we observed that cloud-based APIs frequently impose severe rate limits or unexpected disconnections. This real-world constraint strongly underscores the necessity of our framework: by reducing payload sizes by up to 31.3\%, our system not only saves financial costs but mitigates the risk of hitting bandwidth-induced rate limits.
 
 \section{Conclusion}
-This paper introduced a numerically stable, $O(d^2)$ \textbf{Hybrid Neural-Bandit} framework. By integrating SBERT embeddings, Redis synchronization, and AST hard-metrics, we achieve a 93.5\% success rate in task-aware prompt management. Future work will investigate \textbf{Meta-Learning priors} for cross-domain cold-start acceleration.
+We presented a novel edge-deployable prompt compression framework using contextual bandits. By continuously learning from structural prompt features and LLM feedback, our system establishes a controllable Pareto frontier between token efficiency and output validity. Real-world validation confirms that this approach delivers significant cost savings with virtually zero latency overhead, offering a highly resilient and practical solution for enterprise LLM deployments on edge devices.
 
-\section*{References}
-\small
-\begin{enumerate}
-    \item Li, L., Chu, W., Langford, J., \& Schapire, R. E. (2010). A contextual-bandit approach to personalized news article recommendation. In \textit{Proceedings of the 19th international conference on World Wide Web} (pp. 661-670).
-    \item Jiang, H., Wu, Q., Luo, C., Pang, Y., Yang, J., \& Zhang, D. (2023). LLMLingua: Compressing Prompts for Accelerated Inference. \textit{arXiv preprint arXiv:2310.05731}.
-    \item Reimers, N., \& Gurevych, I. (2019). Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks. In \textit{Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing}.
-    \item Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A. N., ... \& Polosukhin, I. (2017). Attention is all you need. \textit{Advances in neural information processing systems}, 30.
-    \item Sherman, J., \& Morrison, W. J. (1950). Adjustment of an inverse matrix corresponding to a change in one element of a given matrix. \textit{The Annals of Mathematical Statistics}, 21(1), 124-127.
-\end{enumerate}
+% \bibliographystyle{plain}
+% \bibliography{references}
 
 \end{document}

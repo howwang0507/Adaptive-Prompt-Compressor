@@ -1,3 +1,4 @@
+from src.telemetry_logger import track_redis_latency
 import numpy as np
 import threading
 import os
@@ -100,6 +101,7 @@ class LinUCB:
         # Thread safety lock
         self._lock: threading.Lock = threading.Lock()
 
+    @track_redis_latency
     def _sync_from_redis(self):
         """Fetches latest matrices from Redis parameter server."""
         if not self.use_redis:
@@ -115,6 +117,7 @@ class LinUCB:
         except Exception as e:
             logging.error(f"Redis sync failed: {e}")
 
+    @track_redis_latency
     def _sync_to_redis(self, arm: int):
         """Pushes latest matrices to Redis parameter server."""
         if not self.use_redis:

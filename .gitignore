@@ -29,3 +29,10 @@ gcp-key.json
 .env
 .env.local
 *.log
+
+# Scratch & Temporary test scripts
+fix_agent.py
+test_fastmcp*.py
+*.zip
+overleaf_bundle/
+rocling_nlp_bundle/
