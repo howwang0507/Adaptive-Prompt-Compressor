@@ -1,7 +1,8 @@
 # Adaptive Prompt Compressor 🧠📉
 
 [![CI/CD Pipeline](https://github.com/howwang0507/Adaptive-Prompt-Compressor/actions/workflows/ci.yml/badge.svg)](https://github.com/howwang0507/Adaptive-Prompt-Compressor/actions)
-![Release](https://img.shields.io/badge/release-v1.1.1-brightgreen)
+[![PyPI version](https://img.shields.io/pypi/v/adaptive-prompt-compressor.svg)](https://pypi.org/project/adaptive-prompt-compressor/)
+[![PyPI downloads](https://img.shields.io/pypi/dm/adaptive-prompt-compressor.svg)](https://pypi.org/project/adaptive-prompt-compressor/)
 ![Python 3.10 | 3.11 | 3.12](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code style: ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
@@ -154,12 +155,11 @@ Evaluated across canonical HumanEval algorithmic tasks (`scripts/benchmark_human
 
 ### 1. 1-Line Drop-in Wrapper for OpenAI Python SDK
 
-Install via `pip` or `uv`:
+Install standard package from PyPI:
 ```bash
-git clone https://github.com/howwang0507/Adaptive-Prompt-Compressor.git
-cd Adaptive-Prompt-Compressor
-uv sync
+pip install adaptive-prompt-compressor
 ```
+*(Or install via `uv add adaptive-prompt-compressor`)*
 
 Use transparently in your OpenAI pipeline:
 ```python
