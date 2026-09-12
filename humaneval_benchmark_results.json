@@ -1,0 +1,99 @@
+{
+  "benchmark": "HumanEval",
+  "tasks_count": 10,
+  "ast_pass_rate": 100.0,
+  "func_pass_rate": 100.0,
+  "avg_latency_us": 45.5,
+  "results": [
+    {
+      "task_id": "HumanEval/0",
+      "name": "Has Close Elements",
+      "orig_tokens": 98,
+      "comp_tokens": 98,
+      "ast_valid": true,
+      "functional_pass": true,
+      "latency_us": 117.5
+    },
+    {
+      "task_id": "HumanEval/1",
+      "name": "Separate Paren Groups",
+      "orig_tokens": 139,
+      "comp_tokens": 139,
+      "ast_valid": true,
+      "functional_pass": true,
+      "latency_us": 53.7
+    },
+    {
+      "task_id": "HumanEval/2",
+      "name": "Truncate Number",
+      "orig_tokens": 56,
+      "comp_tokens": 56,
+      "ast_valid": true,
+      "functional_pass": true,
+      "latency_us": 39.9
+    },
+    {
+      "task_id": "HumanEval/3",
+      "name": "Below Zero Balance",
+      "orig_tokens": 79,
+      "comp_tokens": 79,
+      "ast_valid": true,
+      "functional_pass": true,
+      "latency_us": 40.0
+    },
+    {
+      "task_id": "HumanEval/4",
+      "name": "Mean Absolute Deviation",
+      "orig_tokens": 72,
+      "comp_tokens": 72,
+      "ast_valid": true,
+      "functional_pass": true,
+      "latency_us": 35.3
+    },
+    {
+      "task_id": "HumanEval/5",
+      "name": "Intersperse List",
+      "orig_tokens": 85,
+      "comp_tokens": 85,
+      "ast_valid": true,
+      "functional_pass": true,
+      "latency_us": 33.7
+    },
+    {
+      "task_id": "HumanEval/6",
+      "name": "Parse Nested Parens",
+      "orig_tokens": 126,
+      "comp_tokens": 126,
+      "ast_valid": true,
+      "functional_pass": true,
+      "latency_us": 36.8
+    },
+    {
+      "task_id": "HumanEval/7",
+      "name": "Filter Strings by Substring",
+      "orig_tokens": 52,
+      "comp_tokens": 52,
+      "ast_valid": true,
+      "functional_pass": true,
+      "latency_us": 31.3
+    },
+    {
+      "task_id": "HumanEval/8",
+      "name": "Sum and Product of List",
+      "orig_tokens": 83,
+      "comp_tokens": 83,
+      "ast_valid": true,
+      "functional_pass": true,
+      "latency_us": 33.2
+    },
+    {
+      "task_id": "HumanEval/9",
+      "name": "Rolling Maximum",
+      "orig_tokens": 89,
+      "comp_tokens": 89,
+      "ast_valid": true,
+      "functional_pass": true,
+      "latency_us": 33.5
+    }
+  ]
+}
