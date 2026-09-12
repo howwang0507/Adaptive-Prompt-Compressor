@@ -12,7 +12,7 @@ Evaluates:
 import time
 import json
 import ast
-from typing import List, Dict, Any
+from typing import Dict, Any
 from src.interface import LinUCBCompressor
 from src.integrations.openai_client import count_tokens_tiktoken, MODEL_INPUT_PRICE_PER_M
 
@@ -126,7 +126,7 @@ def run_evaluation() -> Dict[str, Any]:
 
     print(f"Overall Empirical Token Savings : {overall_savings_pct:.1f}%")
     print(f"Average Action Routing Latency  : {avg_latency_us:.1f} µs (< 0.1 milliseconds)")
-    print(f"Code AST Syntax Pass Rate       : 100.0% (Zero syntax crash guarantee)")
+    print("Code AST Syntax Pass Rate       : 100.0% (Zero syntax crash guarantee)")
     print(f"Est. Savings / 1M API Calls     : ${est_usd_saved_per_1m_requests:,.2f} USD (at gpt-4o-mini input rates)")
     print("=" * 78 + "\n")
 
