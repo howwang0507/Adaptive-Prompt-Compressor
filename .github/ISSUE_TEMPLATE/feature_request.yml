@@ -1,25 +1,27 @@
-name: 💡 Feature Request
-description: Propose a new feature, compression heuristic, or provider integration
+name: 🚀 Feature Request
+description: Suggest a new feature, model support, or enhancement
 labels: ["enhancement"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        We love hearing ideas for improving Adaptive Prompt Compressor!
   - type: textarea
     id: problem
     attributes:
-      label: Problem Statement
-      description: Is your feature request related to a problem or specific LLM workload?
+      label: Is your feature request related to a problem?
+      description: A clear description of what the problem or limitation is.
     validations:
       required: true
   - type: textarea
-    id: proposed_solution
+    id: solution
     attributes:
-      label: Proposed Solution
-      description: Describe the solution or new capability you would like to see.
+      label: Proposed Solution / Feature
+      description: Describe the solution you'd like to see implemented (e.g., support for OpenAI Structured Outputs, Prompt Caching alignment, new bandit arms).
     validations:
       required: true
   - type: textarea
     id: alternatives
     attributes:
-      label: Alternatives Considered
-      description: Any alternative solutions or workarounds you've considered.
-    validations:
-      required: false
+      label: Alternative Approaches Considered
+      description: Any other solutions or workarounds you've explored.

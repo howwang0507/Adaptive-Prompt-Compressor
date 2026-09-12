@@ -1,7 +1,7 @@
 # Adaptive Prompt Compressor 🧠📉
 
 [![CI/CD Pipeline](https://github.com/howwang0507/Adaptive-Prompt-Compressor/actions/workflows/ci.yml/badge.svg)](https://github.com/howwang0507/Adaptive-Prompt-Compressor/actions)
-![Release](https://img.shields.io/badge/release-v1.1.0-brightgreen)
+![Release](https://img.shields.io/badge/release-v1.1.1-brightgreen)
 ![Python 3.10 | 3.11 | 3.12](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code style: ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
@@ -165,7 +165,15 @@ uv run python -m src.cli "def calculate_statistics(data): ..."
 uv run python -m src.cli --benchmark
 ```
 
-### 3. Interactive Web Dashboard (Streamlit & Docker)
+### 3. Interactive Jupyter Notebook Showcase (Cookbook)
+
+Run the end-to-end interactive demo in Jupyter or Google Colab:
+```bash
+uv run jupyter notebook examples/openai_cookbook_showcase.ipynb
+```
+*Walks through LinUCB contextual routing across Code, Technical Documentation, and Conversational Chat, with live `tiktoken` accounting and USD cost telemetry.*
+
+### 4. Interactive Web Dashboard (Streamlit & Docker)
 
 Launch the visual parameter-tuning UI and Redis Fleet Learning simulator:
 ```bash
