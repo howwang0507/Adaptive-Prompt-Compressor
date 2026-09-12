@@ -20,16 +20,6 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
-
-[project.urls]
-Homepage = "https://github.com/howwang0507/Adaptive-Prompt-Compressor"
-Documentation = "https://github.com/howwang0507/Adaptive-Prompt-Compressor#readme"
-Repository = "https://github.com/howwang0507/Adaptive-Prompt-Compressor.git"
-Issues = "https://github.com/howwang0507/Adaptive-Prompt-Compressor/issues"
-Changelog = "https://github.com/howwang0507/Adaptive-Prompt-Compressor/blob/main/CHANGELOG.md"
-
-[project.scripts]
-prompt-compressor = "src.cli:main"
 dependencies = [
     "pandas>=2.0.0",
     "numpy>=1.24.0",
@@ -52,6 +42,16 @@ dependencies = [
     "mcp>=1.27.2",
     "tiktoken>=0.7.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/howwang0507/Adaptive-Prompt-Compressor"
+Documentation = "https://github.com/howwang0507/Adaptive-Prompt-Compressor#readme"
+Repository = "https://github.com/howwang0507/Adaptive-Prompt-Compressor.git"
+Issues = "https://github.com/howwang0507/Adaptive-Prompt-Compressor/issues"
+Changelog = "https://github.com/howwang0507/Adaptive-Prompt-Compressor/blob/main/CHANGELOG.md"
+
+[project.scripts]
+prompt-compressor = "src.cli:main"
 
 [build-system]
 requires = ["hatchling"]
