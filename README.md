@@ -6,6 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code style: ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 ![OpenAI Ready](https://img.shields.io/badge/OpenAI-GPT--4o%20%7C%20Codex%20Ready-412991?logo=openai&logoColor=white)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/howwang0507/Adaptive-Prompt-Compressor/blob/main/examples/openai_cookbook_showcase.ipynb)
 ![Latency](https://img.shields.io/badge/Overhead-%3C%20100%C2%B5s-success)
 ![Hardware](https://img.shields.io/badge/GPU%20Required-0MB%20(Pure%20CPU)-lightgrey)
 
