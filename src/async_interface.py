@@ -24,7 +24,8 @@ class AsyncLinUCBCompressor:
         else:
             self.env = SimulatedEnvironment()
 
-        self.agent = LinUCB(n_arms=3, n_features=5, alpha=alpha)
+        n_features = len(self.env.extract_features("init"))
+        self.agent = LinUCB(n_arms=3, n_features=n_features, alpha=alpha)
         self.fallback_threshold = fallback_threshold
         self.strategies = ["Conservative", "Moderate", "Aggressive"]
 

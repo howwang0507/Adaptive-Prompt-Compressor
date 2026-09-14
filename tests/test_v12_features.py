@@ -1,8 +1,10 @@
 """
-Unit tests for JSONSchemaGuard and PromptCacheAligner.
-Ensures zero degradation in JSON structure and prefix-invariant prompt caching.
+Unit tests for JSONSchemaGuard, PromptCacheAligner, and AsyncLinUCBCompressor.
+Ensures zero degradation in JSON structure, prefix-invariant prompt caching, and concurrent batching.
 """
 
+import pytest
+from src.async_interface import AsyncLinUCBCompressor
 from src.guards.json_guard import JSONSchemaGuard
 from src.integrations.prompt_cache_aligner import PromptCacheAligner
 from src.interface import LinUCBCompressor
@@ -43,3 +45,16 @@ def test_prompt_cache_aligner_preserves_prefix():
     assert optimized[0]["content"] == system_text  # Exactly unchanged for OpenAI prompt caching
     assert optimized[0]["role"] == "system"
     assert meta["prefix_messages_preserved"] == 1
+
+
+@pytest.mark.anyio
+async def test_async_batch_compression():
+    async_compressor = AsyncLinUCBCompressor()
+    prompts = [
+        "First prompt for testing async pipeline.",
+        "Second prompt for testing batch latency.",
+    ]
+    results = await async_compressor.compress_batch(prompts)
+    assert len(results) == 2
+    for r in results:
+        assert "response" in r or "strategy_used" in r

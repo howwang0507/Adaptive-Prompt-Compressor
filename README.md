@@ -196,6 +196,7 @@ uv run python -m src.cli --benchmark
 ### 3. Interactive Cookbooks & Case Studies
 - 📓 **Interactive Jupyter Notebook**: Run our [OpenAI Cookbook Showcase on Google Colab](https://colab.research.google.com/github/howwang0507/Adaptive-Prompt-Compressor/blob/main/examples/openai_cookbook_showcase.ipynb)
 - 🛡️ **Structured Outputs & Prompt Caching**: [`examples/openai_structured_outputs_and_caching_demo.py`](examples/openai_structured_outputs_and_caching_demo.py) (preserves JSON schema integrity & aligns 50% OpenAI prompt cache)
+- ⚡ **High-Throughput Async Batching**: [`examples/async_batch_compression_demo.py`](examples/async_batch_compression_demo.py) (concurrent asyncio batch compression for high-volume pipelines)
 - 🛠️ **Tool / Function Calling Compression**: [`examples/openai_tool_calling_compression.py`](examples/openai_tool_calling_compression.py) (preserves 100% parameter schema fidelity)
 - 📚 **Enterprise RAG Case Study**: [`examples/rag_end_to_end_case_study.py`](examples/rag_end_to_end_case_study.py) (LinUCB contextual compression across enterprise documents)
 - 🔌 **1-Line SDK Wrapper Demo**: [`examples/openai_sdk_wrapper_demo.py`](examples/openai_sdk_wrapper_demo.py)

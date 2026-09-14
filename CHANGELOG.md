@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added `examples/openai_structured_outputs_and_caching_demo.py` showcasing end-to-end telemetry and verification.
 - **Comprehensive Unit Testing Suite**:
   - Added `tests/test_v12_features.py` covering schema integrity and prefix-invariance.
+- **High-Throughput Async Batch Processing**:
+  - Added `AsyncLinUCBCompressor` batch processing support and cookbook demo in `examples/async_batch_compression_demo.py`.
 
 ## [1.1.2] - 2026-09-14
 

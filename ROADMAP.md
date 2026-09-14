@@ -26,6 +26,8 @@ This document outlines the strategic engineering roadmap for **Adaptive-Prompt-C
   - `PromptCacheAligner` implementation in `src/integrations/prompt_cache_aligner.py` ensuring bit-for-bit invariance on static system preambles to unlock OpenAI's 50% prompt caching discount.
 - [x] **Cookbook & Verification Test Suites**:
   - Interactive demonstration script `examples/openai_structured_outputs_and_caching_demo.py` and unit test coverage in `tests/test_v12_features.py`.
+- [x] **High-Throughput Batch Processing**:
+  - `AsyncLinUCBCompressor` batch processing support via `compress_batch` with demonstration cookbook in `examples/async_batch_compression_demo.py`.
 
 ### 🚀 v2.0.0 — Reasoning Models & Distributed Parameter Sync (Q4 2026)
 - [ ] **Reasoning Models Adaptation (`o1` / `o3-mini`)**:
