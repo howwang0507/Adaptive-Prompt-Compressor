@@ -11,6 +11,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Reasoning Model Support**: Optimized compression routines for OpenAI `o1`, `o1-mini`, and `o3-mini`.
 - **Streaming Compression Middleware**: Chunked prompt preprocessing with zero impact on Time-To-First-Token (TTFT).
 
+## [1.4.1] - 2026-09-14
+
+### Fixed & Hardened
+- **Structural Guard Counter-Example Elimination (`src/guards/structural_guard.py`)**:
+  - Implemented exact word-boundary matching (`\bnot\b`) preventing false positives from words like `nothing`.
+  - Added character-level Chinese substring matching for negations (`不得`, `禁止`, `切勿`) eliminating CJK tokenization misses.
+  - Bound comparison operators, numbers, and units into atomic tuples (`<= 30 kg` vs `> 30 g`, `30 days` vs `300 days`).
+  - Implemented real markdown code block placeholder isolation, preserving python code indentations byte-for-byte.
+- **Strict Barrier Constrained Reward Formulation (`src/utils.py`)**:
+  - Enforced that any relative quality degradation violating tolerance receives a strictly negative reward (`-barrier_penalty - lambda * violation`), eliminating positive-reward loopholes for low-quality outputs.
+- **RAG Mandatory Citation Retention (`src/rag/evidence_compressor.py`)**:
+  - Made citations (`[Doc 1]`, `[Doc 2]`) a mandatory retention set, and bound trailing citation tags to preceding sentences with post-verification fallback.
+- **Economic Net Benefit Realistic Modeling (`src/economics/economic_model.py`)**:
+  - Factored in output tokens, verification CPU latency, and retry costs into true composite cost calculations.
+- **Academic Benchmark Scope Alignment**:
+  - Updated README and scripts to accurately label HumanEval as Code Context AST Preservation and proxy comparisons as Static Token-Level Pruning Proxy.
+
 ## [1.4.0] - 2026-09-14
 
 ### Added

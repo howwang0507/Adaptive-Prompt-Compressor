@@ -49,25 +49,37 @@ def calculate_constrained_reward(
     comp_tokens: int,
     task_success: bool,
     quality_score: float = 1.0,
+    baseline_quality: float = 1.0,
     quality_tolerance: float = 0.90,
     lambda_cost: float = 1.5,
-    lambda_lagrange: float = 5.0,
+    lambda_lagrange: float = 10.0,
+    barrier_penalty: float = 5.0,
 ) -> float:
     """
-    Quality-Constrained Bandit Objective:
-    Minimize total task cost subject to quality degradation not exceeding tolerance.
-    Reward = lambda_cost * saving_ratio - lambda_lagrange * max(0, quality_tolerance - quality_score) - penalty_if_failed
+    Quality-Constrained Bandit Objective with Strict Barrier:
+    Subject to: (quality_score / max(1e-6, baseline_quality)) >= quality_tolerance.
+    If the relative quality constraint is violated, reward is GUARANTEED to be negative,
+    preventing any high-saving but quality-degraded strategy from achieving positive reward.
     """
     saving_ratio = max(0.0, (base_tokens - comp_tokens) / max(base_tokens, 1))
 
+    # 1. Hard task failure (e.g. execution crash, syntax error)
     if not task_success:
-        # Severe penalty for task failure (e.g. AST error, wrong answer)
-        return -3.0
+        return -5.0
 
-    # Constraint violation gap
-    violation = max(0.0, quality_tolerance - quality_score)
-    constrained_reward = (lambda_cost * saving_ratio) - (lambda_lagrange * violation)
+    # 2. Relative quality retention ratio
+    relative_retention = quality_score / max(1e-6, baseline_quality)
+
+    # 3. Constraint violation check
+    if relative_retention < quality_tolerance:
+        violation_gap = quality_tolerance - relative_retention
+        # Strict Barrier: guarantees reward is negative and severely penalized
+        return -barrier_penalty - (lambda_lagrange * violation_gap)
+
+    # 4. Within acceptable quality constraint: reward token cost reduction
+    constrained_reward = lambda_cost * saving_ratio
     return constrained_reward
+
 
 
 

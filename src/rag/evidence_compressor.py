@@ -26,17 +26,20 @@ class EvidencePreservingRAGCompressor:
 
     @classmethod
     def segment_sentences(cls, text: str) -> List[str]:
-        """Splits text into sentences supporting both English and CJK punctuation."""
-        # Split by periods, question marks, exclamation marks, or Chinese punctuation (。？！；\n)
-        parts = re.split(r"([。？！；\n]|\.\s+|\?\s+|\!\s+)", text)
-        sentences = []
-        for i in range(0, len(parts), 2):
-            s = parts[i]
-            if i + 1 < len(parts):
-                s += parts[i + 1]
-            if s.strip():
-                sentences.append(s.strip())
-        return sentences
+        """
+        Splits text into sentences supporting English and CJK punctuation,
+        while strictly binding trailing citations (e.g. '[Doc 1]') to their respective sentences.
+        """
+        regex = re.compile(
+            r"([^。？！；\n\.\?\!]+(?:[。？！；\.\?\!]+(?:\s*\[(?:Doc|Source|來源|文獻|Ref)\s*\d+\])?))",
+            re.IGNORECASE,
+        )
+        matches = [m.group(0).strip() for m in regex.finditer(text) if m.group(0).strip()]
+        if matches:
+            return matches
+
+        # Fallback if no terminal punctuation found
+        return [text.strip()] if text.strip() else []
 
     def compute_relevance(self, query: str, sentence: str) -> float:
         """Heuristic lexical overlap & keyword match between query and candidate sentence."""
@@ -80,26 +83,51 @@ class EvidencePreservingRAGCompressor:
                 "retained_sentences": len(sentences),
             }
 
-        # Score all sentences
-        scored = []
+        # Partition sentences into:
+        # 1. Mandatory Retention Set (Sentences containing explicit citations, doc tags, or URLs)
+        # 2. Candidate Sentences (Ranked by query relevance)
+        mandatory_indices = set()
+        candidate_scored = []
+
         for idx, s in enumerate(sentences):
-            rel = self.compute_relevance(query, s)
-            # Check for critical negations or numbers
-            entities = StructuralConstraintGuard.extract_critical_entities(s)
-            has_critical = len(entities["negations"]) > 0 or len(entities["numerics"]) > 0
-            if has_critical:
-                rel += 0.3  # Prioritize preserving constraints
-            scored.append((idx, s, rel))
+            has_citation = bool(self.CITATION_REGEX.search(s))
+            if has_citation:
+                mandatory_indices.add(idx)
+            else:
+                rel = self.compute_relevance(query, s)
+                entities = StructuralConstraintGuard.extract_critical_entities(s)
+                if entities["en_negations"] or entities["zh_negations"] or entities["bound_entities"]:
+                    rel += 0.25
+                candidate_scored.append((idx, s, rel))
 
-        # Sort by relevance descending and pick top portion
-        num_to_keep = max(1, int(len(sentences) * keep_ratio))
-        scored.sort(key=lambda x: x[2], reverse=True)
-        chosen = scored[:num_to_keep]
+        # Calculate remaining quota
+        target_total_to_keep = max(len(mandatory_indices), int(len(sentences) * keep_ratio))
+        remaining_slots = max(0, target_total_to_keep - len(mandatory_indices))
 
-        # Re-sort chosen sentences by original document order to preserve natural flow
-        chosen.sort(key=lambda x: x[0])
-        compressed_sentences = [item[1] for item in chosen]
+        candidate_scored.sort(key=lambda x: x[2], reverse=True)
+        chosen_candidates = candidate_scored[:remaining_slots]
+
+        # Combine mandatory sentences + top candidates
+        chosen_indices = mandatory_indices.union({item[0] for item in chosen_candidates})
+
+        # Re-sort in original sequential document order
+        sorted_chosen_indices = sorted(list(chosen_indices))
+        compressed_sentences = [sentences[i] for i in sorted_chosen_indices]
         compressed_text = " ".join(compressed_sentences)
+
+        # Post-compression constraint validation & fallback
+        is_valid, reason = StructuralConstraintGuard.verify_constraint_preservation(document_text, compressed_text)
+        if not is_valid:
+            # Safe Fallback: return original document if constraints broken
+            return document_text, {
+                "orig_tokens": orig_tokens,
+                "comp_tokens": orig_tokens,
+                "savings_pct": 0.0,
+                "retained_sentences": len(sentences),
+                "total_sentences": len(sentences),
+                "fallback_triggered": True,
+                "fallback_reason": reason,
+            }
 
         comp_tokens = len(compressed_text.split())
         savings = (1.0 - comp_tokens / max(1, orig_tokens)) * 100.0
@@ -110,5 +138,7 @@ class EvidencePreservingRAGCompressor:
             "savings_pct": round(savings, 1),
             "retained_sentences": len(compressed_sentences),
             "total_sentences": len(sentences),
+            "fallback_triggered": False,
         }
         return compressed_text, telemetry
+

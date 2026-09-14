@@ -122,12 +122,12 @@ uv run python scripts/compare_sota_compressors.py
 | **Conversational Chat & Summarization** | **42.5%** | N/A | **38.6 µs** | **0.918** | Arm 2 (Aggressive) |
 | **Enterprise Mixed Workload Blend** | **31.4% Avg** | **99.8% Reliability** | **< 100 µs** | **0.932** | Task-Aware Adaptive |
 
-### 🧪 OpenAI HumanEval AST & Functional Execution Benchmark (100% Pass@1)
+### 🧪 OpenAI HumanEval Code Context AST & Execution Preservation Benchmark
 
-Evaluated across canonical HumanEval algorithmic tasks (`scripts/benchmark_humaneval_ast.py`):
+Evaluated across canonical HumanEval algorithmic tasks (`scripts/benchmark_humaneval_ast.py`) to verify that prompt compression preserves reference code syntax and execution pass rates:
 
 | HumanEval Task ID | Task Description | Tokens In | Tokens Out | AST Parse Valid | Unit Test Pass | Routing Overhead |
-| :--- | :--- | :---: | :---: | :---: | :---: | :---: |
+| :--- | :--- | :--- :---: | :---: | :---: | :---: | :---: |
 | **HumanEval/0** | Has Close Elements | 98 | 98 | **✅ 100%** | **✅ Pass** | 117.5 µs |
 | **HumanEval/1** | Separate Paren Groups | 139 | 139 | **✅ 100%** | **✅ Pass** | 53.7 µs |
 | **HumanEval/2** | Truncate Number | 56 | 56 | **✅ 100%** | **✅ Pass** | 39.9 µs |
@@ -140,7 +140,7 @@ Evaluated across canonical HumanEval algorithmic tasks (`scripts/benchmark_human
 | **HumanEval/9** | Rolling Maximum | 89 | 89 | **✅ 100%** | **✅ Pass** | 33.5 µs |
 | **Overall Metric** | **10 Programming Tasks** | **879 Tokens** | **879 Tokens** | **100.0% Syntax Pass** | **100.0% Functional Pass** | **45.5 µs Avg Latency** |
 
-*Key finding: LinUCB autonomously routes technical code to Arm 0 (Conservative), guaranteeing **zero syntax truncation** and **100% functional pass rate**.*
+*Key finding: LinUCB autonomously routes technical code to Arm 0 (Conservative), guaranteeing **zero syntax truncation** and **100% unit test preservation** on reference code contexts.*
 
 ---
 

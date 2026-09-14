@@ -23,43 +23,60 @@ class EconomicNetBenefitModel:
     def evaluate_net_cost(
         cls,
         model_name: str,
-        original_tokens: int,
-        compressed_tokens: int,
-        compression_latency_ms: float,
-        task_success_rate: float,
-        is_cache_hit: bool = False,
-        cpu_cost_per_ms: float = 0.00000002,  # Typical serverless CPU cost per ms
+        original_input_tokens: int,
+        compressed_input_tokens: int,
+        output_tokens: int = 150,
+        compression_latency_ms: float = 0.08,
+        verification_latency_ms: float = 0.02,
+        task_success_rate: float = 1.0,
+        cache_hit_ratio: float = 0.0,
+        cpu_cost_per_ms: float = 0.00000002,  # Standard AWS Lambda / Cloud Run rate
     ) -> Dict[str, Any]:
+        """
+        Calculates realistic end-to-end economic net benefit:
+        - Input token rate factoring prompt cache discount (50%).
+        - Output generation token cost.
+        - LinUCB decision + structural verification compute overhead.
+        - Downstream retry costs on task accuracy failure.
+        """
         input_price_per_m = MODEL_INPUT_PRICE_PER_M.get(model_name, 0.15)
-        # OpenAI Prompt Caching offers 50% discount on cache hit
-        effective_price_per_m = input_price_per_m * (0.5 if is_cache_hit else 1.0)
+        output_price_per_m = input_price_per_m * 4.0  # Typically 3x-4x input price
 
-        # Baseline cost (raw prompt sent uncompressed)
-        baseline_cost_usd = (original_tokens / 1_000_000.0) * effective_price_per_m
+        # Effective input price with cache discount
+        effective_input_price_per_m = input_price_per_m * (1.0 - 0.5 * cache_hit_ratio)
 
-        # Compression direct API cost
-        direct_comp_cost_usd = (compressed_tokens / 1_000_000.0) * effective_price_per_m
+        # Baseline cost (raw prompt without compression)
+        baseline_input_cost = (original_input_tokens / 1_000_000.0) * effective_input_price_per_m
+        output_cost = (output_tokens / 1_000_000.0) * output_price_per_m
+        baseline_total_cost_usd = baseline_input_cost + output_cost
 
-        # Compute cost for running LinUCB on CPU
-        compute_cost_usd = compression_latency_ms * cpu_cost_per_ms
+        # Compressed input cost
+        compressed_input_cost = (compressed_input_tokens / 1_000_000.0) * effective_input_price_per_m
 
-        # Expected retry cost if task fails and must be re-run
+        # Total compute overhead (Bandit routing + Guard verification)
+        total_compute_latency_ms = compression_latency_ms + verification_latency_ms
+        compute_cost_usd = total_compute_latency_ms * cpu_cost_per_ms
+
+        # Expected retry cost if downstream task or AST fails
         failure_rate = max(0.0, 1.0 - task_success_rate)
-        expected_retry_cost_usd = failure_rate * baseline_cost_usd
+        expected_retry_cost_usd = failure_rate * baseline_total_cost_usd
 
         # Total composite cost
-        total_effective_cost_usd = direct_comp_cost_usd + compute_cost_usd + expected_retry_cost_usd
+        total_effective_cost_usd = compressed_input_cost + output_cost + compute_cost_usd + expected_retry_cost_usd
 
-        net_savings_usd = baseline_cost_usd - total_effective_cost_usd
-        net_roi_pct = (net_savings_usd / max(1e-9, baseline_cost_usd)) * 100.0
+        net_savings_usd = baseline_total_cost_usd - total_effective_cost_usd
+        net_roi_pct = (net_savings_usd / max(1e-9, baseline_total_cost_usd)) * 100.0
 
         return {
             "model": model_name,
-            "original_tokens": original_tokens,
-            "compressed_tokens": compressed_tokens,
-            "token_reduction_pct": round((1.0 - compressed_tokens / max(1, original_tokens)) * 100.0, 2),
-            "baseline_cost_usd": round(baseline_cost_usd, 7),
+            "original_input_tokens": original_input_tokens,
+            "compressed_input_tokens": compressed_input_tokens,
+            "output_tokens": output_tokens,
+            "token_reduction_pct": round((1.0 - compressed_input_tokens / max(1, original_input_tokens)) * 100.0, 2),
+            "baseline_total_cost_usd": round(baseline_total_cost_usd, 7),
             "total_effective_cost_usd": round(total_effective_cost_usd, 7),
+            "compute_cost_usd": round(compute_cost_usd, 7),
+            "expected_retry_cost_usd": round(expected_retry_cost_usd, 7),
             "net_savings_usd": round(net_savings_usd, 7),
             "net_roi_pct": round(net_roi_pct, 2),
             "is_net_profitable": net_savings_usd > 0,

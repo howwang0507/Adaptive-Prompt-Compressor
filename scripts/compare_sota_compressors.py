@@ -175,12 +175,12 @@ def run_comparison():
             else "N/A"
         )
 
-        if "LLMLingua" in name:
-            hw = "GPU (LLaMA/BERT ~4GB)"
-            display_lat = "~85.0 ms (Sim)"
+        if "Proxy" in name:
+            hw = "CPU (Simulated Proxy)"
+            display_lat = f"{avg_lat:.1f} µs"
         elif "Adaptive LinUCB" in name:
             hw = "Zero GPU (< 5MB RAM)"
-            display_lat = f"{avg_lat:.1f} µs (< 1ms)"
+            display_lat = f"{avg_lat:.1f} µs"
         elif "Static" in name:
             hw = "CPU (< 1MB RAM)"
             display_lat = f"{avg_lat:.1f} µs"
