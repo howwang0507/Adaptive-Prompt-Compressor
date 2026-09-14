@@ -8,9 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned
-- **OpenAI Structured Outputs (JSON Schema)**: Guardrails to compress user payloads without breaking JSON schema structural constraints.
-- **OpenAI Prompt Cache Prefix Alignment**: Preserve exact prompt prefix boundaries to stack LinUCB compression with OpenAI's 50% prompt caching discount.
 - **Reasoning Model Support**: Optimized compression routines for OpenAI `o1`, `o1-mini`, and `o3-mini`.
+- **Streaming Compression Middleware**: Chunked prompt preprocessing with zero impact on Time-To-First-Token (TTFT).
+
+## [1.2.0] - 2026-09-14
+
+### Added
+- **JSON Schema Guard for OpenAI Structured Outputs (`src/guards/json_guard.py`)**:
+  - Automatically isolates and protects `properties`, `type`, `required`, and `enum` fields.
+  - Recursively compresses verbose `description` strings without compromising JSON parsing validity.
+- **OpenAI Prompt Caching Prefix Co-Optimization (`src/integrations/prompt_cache_aligner.py`)**:
+  - Implemented boundary partitioner ensuring static system instructions remain 100% byte-for-byte invariant to maximize OpenAI's 50% Prompt Caching discount.
+  - Dynamically routes LinUCB bandit compression across user and retrieved context suffixes.
+- **Interactive Structured Outputs & Prompt Caching Cookbook**:
+  - Added `examples/openai_structured_outputs_and_caching_demo.py` showcasing end-to-end telemetry and verification.
+- **Comprehensive Unit Testing Suite**:
+  - Added `tests/test_v12_features.py` covering schema integrity and prefix-invariance.
 
 ## [1.1.2] - 2026-09-14
 

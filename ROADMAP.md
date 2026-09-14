@@ -19,14 +19,13 @@ This document outlines the strategic engineering roadmap for **Adaptive-Prompt-C
 - [x] Multi-Python CI/CD testing matrix (Python 3.10, 3.11, 3.12) with 100% green unit tests.
 - [x] Strict test suite isolation and repository hygiene.
 
-### 🎯 v1.2.0 — OpenAI Structured Outputs & Prompt Caching (Q3 2026)
-- [ ] **Structured Outputs / JSON Mode Guard**:
-  - Contextual compression that automatically detects and preserves JSON Schema keys, enums, and required properties.
-- [ ] **OpenAI Prompt Caching Prefix Co-Optimization**:
-  - OpenAI offers a 50% discount on cached prompt prefixes (1,024+ tokens).
-  - Implement prefix-invariant boundary detection so the compression engine only mutates dynamic suffix content, maximizing both cache hit rate and token pruning.
-- [ ] **Batch Processing API**:
-  - High-throughput asynchronous batch compression for high-volume enterprise ingestion.
+### ✅ v1.2.0 — OpenAI Structured Outputs & Prompt Caching (Completed)
+- [x] **Structured Outputs / JSON Mode Guard**:
+  - `JSONSchemaGuard` implementation in `src/guards/json_guard.py` protecting structural keys, types, required fields, and enums while safely pruning descriptions.
+- [x] **OpenAI Prompt Caching Prefix Co-Optimization**:
+  - `PromptCacheAligner` implementation in `src/integrations/prompt_cache_aligner.py` ensuring bit-for-bit invariance on static system preambles to unlock OpenAI's 50% prompt caching discount.
+- [x] **Cookbook & Verification Test Suites**:
+  - Interactive demonstration script `examples/openai_structured_outputs_and_caching_demo.py` and unit test coverage in `tests/test_v12_features.py`.
 
 ### 🚀 v2.0.0 — Reasoning Models & Distributed Parameter Sync (Q4 2026)
 - [ ] **Reasoning Models Adaptation (`o1` / `o3-mini`)**:
