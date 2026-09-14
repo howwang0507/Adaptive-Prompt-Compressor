@@ -11,7 +11,7 @@ Solves critical false-positive and leakage vulnerabilities:
 
 import ast
 import re
-from typing import Any, Dict, Set, Tuple
+from typing import Any, Dict, List, Set, Tuple
 
 
 # Critical constraints that must NEVER be deleted during compression
@@ -26,21 +26,89 @@ CRITICAL_NEGATION_KEYWORDS_ZH: Set[str] = {
 
 # Regex to identify comparison operators, numbers, and bound units as atomic entities
 BOUND_CONSTRAINT_REGEX = re.compile(
-    r"(?P<op>>=|<=|==|!=|>|<|超過|大於|小於|至少|至多|以內|以上|以下)?\s*"
-    r"(?P<curr>\$|€|£|¥|NT\$|USD)?\s*"
-    r"\b(?P<num>\d+(?:[\.,]\d+)?)\b\s*"
-    r"(?P<unit>%|天|日|月|年|小時|分|秒|ms|s|kg|g|m|gb|mb|kb|tokens|usd|days)?",
+    r"(?P<op>>=|<=|==|!=|>|<|=|超過|大於|小於|至少|至多|以內|以上|以下)?\s*"
+    r"(?P<curr>\$|€|£|¥|NT\$|USD|NTD)?\s*"
+    r"(?<!\d)(?P<num>[-+]?\d+(?:[\.,]\d+)?)(?!\d)\s*"
+    r"(?P<unit>%|天|日|月|年|小時|分|秒|ms|s|kg|g|m|gb|mb|kb|tokens|usd|ntd|元|days)?",
     re.IGNORECASE,
 )
 
 # Regex to detect code blocks
 CODE_BLOCK_REGEX = re.compile(r"```(?:\w+)?\s*(.*?)\s*```", re.DOTALL)
+CLAUSE_SPLIT_REGEX = re.compile(r"[\n\.\?!;。？！；,，]+")
 
 
 class StructuralConstraintGuard:
     """
     Guards prompts against lossy compression with zero-tolerance for constraint violation.
     """
+
+    @classmethod
+    def _split_clauses(cls, text: str) -> List[str]:
+        return [c.strip() for c in CLAUSE_SPLIT_REGEX.split(text) if c.strip()]
+
+    @classmethod
+    def _tokenize(cls, text: str) -> List[str]:
+        tokens = []
+        for m in re.finditer(r"[a-zA-Z0-9]+|[\u4e00-\u9fa5]", text):
+            tokens.append(m.group(0).lower())
+        return tokens
+
+    @classmethod
+    def extract_negation_scopes(cls, text: str) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+        """
+        Extracts negation scopes and non-negated token sets to prevent polarity inversion
+        and unauthorized target transfer (e.g. 'Do not delete A. Delete B.').
+        """
+        clauses = cls._split_clauses(text)
+        negated_scopes = []
+        unnegated_scopes = []
+
+        stop_words = {"the", "a", "an", "to", "of", "and", "please", "also"}
+
+        for clause in clauses:
+            clause_tokens = cls._tokenize(clause)
+            found_neg = None
+            neg_pos = -1
+
+            # Check English negations
+            for kw in CRITICAL_NEGATION_KEYWORDS_EN:
+                if re.search(rf"\b{re.escape(kw)}\b", clause, re.IGNORECASE):
+                    for idx, t in enumerate(clause_tokens):
+                        if t == kw.lower():
+                            found_neg = kw.lower()
+                            neg_pos = idx
+                            break
+                    if found_neg:
+                        break
+
+            # Check Chinese negations
+            if not found_neg:
+                for kw in CRITICAL_NEGATION_KEYWORDS_ZH:
+                    if kw in clause:
+                        found_neg = kw
+                        kw_chars = cls._tokenize(kw)
+                        for idx in range(len(clause_tokens) - len(kw_chars) + 1):
+                            if clause_tokens[idx : idx + len(kw_chars)] == kw_chars:
+                                neg_pos = idx + len(kw_chars) - 1
+                                break
+                        break
+
+            if found_neg and neg_pos != -1:
+                target_tokens = set(clause_tokens[neg_pos + 1 :]) - stop_words
+                negated_scopes.append({
+                    "clause": clause,
+                    "negation": found_neg,
+                    "targets": target_tokens,
+                })
+            else:
+                unnegated_tokens = set(clause_tokens) - stop_words
+                unnegated_scopes.append({
+                    "clause": clause,
+                    "tokens": unnegated_tokens,
+                })
+
+        return negated_scopes, unnegated_scopes
 
     @classmethod
     def extract_critical_entities(cls, text: str) -> Dict[str, Any]:
@@ -110,7 +178,8 @@ class StructuralConstraintGuard:
     ) -> Tuple[bool, str]:
         """
         Validates whether compressed_text strictly preserves all critical negations,
-        bound constraints (numbers, operators, units), and code syntax.
+        negation target scopes, bound constraints (numbers, operators, currency, units),
+        and code syntax.
         """
         orig_entities = cls.extract_critical_entities(original_text)
 
@@ -124,26 +193,58 @@ class StructuralConstraintGuard:
             if neg not in compressed_text:
                 return False, f"Critical Chinese negation '{neg}' was removed"
 
-        # 3. Verify Bound Numerical & Comparison Constraints
+        # 3. Verify Negation Target Scopes (prevent polarity inversion and negation drift)
+        orig_neg, orig_unneg = cls.extract_negation_scopes(original_text)
+        comp_neg, comp_unneg = cls.extract_negation_scopes(compressed_text)
+
+        all_orig_unneg_tokens = set()
+        for u in orig_unneg:
+            all_orig_unneg_tokens.update(u["tokens"])
+
+        for o_scope in orig_neg:
+            o_targets = o_scope["targets"]
+            if not o_targets:
+                continue
+            found_in_comp_neg = False
+            for c_scope in comp_neg:
+                if o_targets.intersection(c_scope["targets"]):
+                    found_in_comp_neg = True
+                    break
+            if not found_in_comp_neg:
+                return False, f"Negation target scope {o_targets} was un-negated or removed"
+
+        for c_scope in comp_neg:
+            c_targets = c_scope["targets"]
+            matching_orig = None
+            for o_scope in orig_neg:
+                if o_scope["targets"].intersection(c_targets):
+                    matching_orig = o_scope
+                    break
+            if matching_orig:
+                inverted_tokens = (c_targets - matching_orig["targets"]).intersection(all_orig_unneg_tokens)
+                if inverted_tokens:
+                    return False, f"Negation was erroneously transferred to un-negated entity {inverted_tokens}"
+            elif orig_neg:
+                return False, f"Spurious or transferred negation on {c_targets}"
+
+        # 4. Verify Bound Numerical & Comparison Constraints
         comp_entities = cls.extract_critical_entities(compressed_text)["bound_entities"]
         for orig in orig_entities["bound_entities"]:
-            # Check if there is an exact matching bound entity in compressed text
             matched = False
             for comp in comp_entities:
-                # Number must match exactly (prevent 30 becoming 300)
                 if orig["num"] == comp["num"]:
-                    # If operator was specified, operator must match
-                    if orig["op"] and orig["op"] != comp["op"]:
+                    if orig["op"] != comp["op"]:
                         continue
-                    # If unit was specified, unit must match (prevent kg becoming g)
-                    if orig["unit"] and orig["unit"] != comp["unit"]:
+                    if orig["curr"] != comp["curr"]:
+                        continue
+                    if orig["unit"] != comp["unit"]:
                         continue
                     matched = True
                     break
             if not matched:
                 return False, f"Bound constraint '{orig['raw']}' was corrupted or dropped"
 
-        # 4. Verify Code Syntax Integrity
+        # 5. Verify Code Syntax Integrity
         if not cls.validate_code_blocks(compressed_text):
             return False, "Python code block AST syntax error introduced"
 

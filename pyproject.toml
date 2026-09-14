@@ -1,6 +1,6 @@
 [project]
 name = "adaptive-prompt-compressor"
-version = "1.4.1"
+version = "1.4.2"
 description = "Task-aware dynamic prompt compression using LinUCB Contextual Bandits with first-class OpenAI support."
 readme = "README.md"
 requires-python = ">=3.10"

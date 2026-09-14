@@ -28,18 +28,47 @@ class EvidencePreservingRAGCompressor:
     def segment_sentences(cls, text: str) -> List[str]:
         """
         Splits text into sentences supporting English and CJK punctuation,
-        while strictly binding trailing citations (e.g. '[Doc 1]') to their respective sentences.
+        protecting URLs, decimals, and versions, while preserving trailing unpunctuated text
+        and binding citations (e.g. '[Doc 1]') to their respective sentences.
         """
-        regex = re.compile(
-            r"([^。？！；\n\.\?\!]+(?:[。？！；\.\?\!]+(?:\s*\[(?:Doc|Source|來源|文獻|Ref)\s*\d+\])?))",
+        if not text or not text.strip():
+            return []
+
+        urls = []
+
+        def url_rep(m):
+            url = m.group(0)
+            trailing = ""
+            while url and url[-1] in ".,;:!?)":
+                trailing = url[-1] + trailing
+                url = url[:-1]
+            urls.append(url)
+            return f"__URL_{len(urls)-1}__{trailing}"
+
+        s = re.sub(r"https?://\S+", url_rep, text)
+
+        decimals = []
+
+        def dec_rep(m):
+            decimals.append(m.group(0))
+            return f"__DEC_{len(decimals)-1}__"
+
+        s = re.sub(r"(?i)\b(?:v\d+(?:\.\d+)+|\d+(?:\.\d+)+)\b", dec_rep, s)
+
+        pattern = re.compile(
+            r"([^。！？；\.\?\!\n]+(?:[。！？；\.\?\!]+(?:\s*\[(?:Doc|Source|來源|文獻|Ref)\s*\d+\])?|\s*$))",
             re.IGNORECASE,
         )
-        matches = [m.group(0).strip() for m in regex.finditer(text) if m.group(0).strip()]
-        if matches:
-            return matches
+        matches = [m.group(0).strip() for m in pattern.finditer(s) if m.group(0).strip()]
 
-        # Fallback if no terminal punctuation found
-        return [text.strip()] if text.strip() else []
+        res = []
+        for c in matches:
+            for i, u in enumerate(urls):
+                c = c.replace(f"__URL_{i}__", u)
+            for i, d in enumerate(decimals):
+                c = c.replace(f"__DEC_{i}__", d)
+            res.append(c)
+        return res
 
     def compute_relevance(self, query: str, sentence: str) -> float:
         """Heuristic lexical overlap & keyword match between query and candidate sentence."""

@@ -11,6 +11,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Reasoning Model Support**: Optimized compression routines for OpenAI `o1`, `o1-mini`, and `o3-mini`.
 - **Streaming Compression Middleware**: Chunked prompt preprocessing with zero impact on Time-To-First-Token (TTFT).
 
+## [1.4.2] - 2026-09-14
+
+### Fixed & Hardened
+- **Structural Guard Counter-Example Elimination (`src/guards/structural_guard.py`)**:
+  - **CJK-Safe Digit Boundary**: Replaced ASCII `\b` with lookarounds `(?<!\d)` and `(?!\d)`, ensuring numbers surrounded by continuous Chinese characters (e.g. `保留30天` vs `保留300天`) are accurately extracted and defended.
+  - **Currency Symbol Verification**: Added strict currency symbol binding and equality verification (`Pay $100` vs `Pay €100`), catching cross-currency corruptions.
+  - **Negative Sign & Operator Matching**: Added signed number support `[-+]?` and single equality operator `=`, preventing sign stripping (`Keep x = -30` vs `Keep x = 30`).
+  - **Negation Scope & Target Binding**: Implemented clause-level negation target extraction to prevent negation transfer and polarity inversion (`Do not delete A. Delete B.` vs `Delete A. Do not delete B.`).
+- **Robust RAG Sentence Segmentation (`src/rag/evidence_compressor.py`)**:
+  - **Trailing Sentence Retention**: Ensured unpunctuated final sentences (`Final evidence without punctuation`) are strictly preserved and never dropped before relevance ranking.
+  - **Decimal & Version Protection**: Masked floating point numbers (`3.14`, `0.0025`) and version identifiers (`v1.4.2`) to prevent premature mid-number sentence splitting.
+  - **URL Protection**: Preserved full URLs with trailing punctuation handling (`https://example.com/report`).
+
 ## [1.4.1] - 2026-09-14
 
 ### Fixed & Hardened

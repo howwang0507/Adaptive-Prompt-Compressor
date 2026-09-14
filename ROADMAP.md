@@ -41,15 +41,18 @@ This document outlines the strategic engineering roadmap for **Adaptive-Prompt-C
 - [x] **GitHub Profile Developer Hub (`profile/README.md`)**:
   - Modernized developer profile and repository showcase.
 
-### ✅ v1.4.0 — Quality-Constrained Adaptive Context Compression (Current)
-- [x] **Block-Level Structural & Constraint Guard (`src/guards/structural_guard.py`)**:
-  - Code indentation and Python syntax isolation, mandatory negation keyword locking (`not`, `never`, `不得`, `禁止`), and numerical entity protection with automatic safe fallback to original prompt on verification failure.
+### ✅ v1.4.2 — Quality-Constrained Adaptive Context Compression (Current)
+- [x] **Hardened Structural & Constraint Guard (`src/guards/structural_guard.py`)**:
+  - Code indentation and Python syntax AST isolation.
+  - Mandatory negation locking with clause-level target binding (defends against polarity inversion and negation scope drift).
+  - CJK-safe digit boundary matching (`(?<!\d)` / `(?!\d)`), currency verification (`$`, `€`, `¥`, `NT$`), and signed numbers (`[-+]?`).
+  - Automatic safe fallback to original prompt on verification failure.
 - [x] **Constrained Bandit Objective & Closed-Loop Feedback**:
   - Lagrangian-penalized reward function `calculate_constrained_reward` in `src/utils.py` and downstream task accuracy reporting `response.report_feedback()` in `src/integrations/openai_client.py`.
-- [x] **Evidence-Preserving RAG Compressor (`src/rag/evidence_compressor.py`)**:
-  - Query-evidence relevance ranking, citation/source preservation `[Doc 1]`, and CJK multilingual sentence segmentation.
-- [x] **End-to-End Economic Net Benefit & Latency Model (`src/telemetry/economic_model.py`)**:
-  - Realistic ROI evaluation incorporating inference token rates, cache hits, serverless CPU compute overhead, retry costs, and latency distribution percentiles (p50/p95).
+- [x] **Robust Evidence-Preserving RAG Compressor (`src/rag/evidence_compressor.py`)**:
+  - Query-evidence relevance ranking, mandatory citation preservation `[Doc 1]`, protected decimals (`3.14`) and URLs, plus unpunctuated trailing sentence retention.
+- [x] **End-to-End Economic Net Benefit & Latency Model (`src/economics/economic_model.py`)**:
+  - Realistic ROI evaluation incorporating inference token rates, cache hits, CPU compute overhead, retry costs, and latency distribution percentiles.
 - [x] **Academic Rigor & Benchmark Honesty Revision**:
   - Clarified HumanEval benchmark as Code Context AST Preservation and benchmark comparisons as Static Token-Level Pruning Proxy.
 
