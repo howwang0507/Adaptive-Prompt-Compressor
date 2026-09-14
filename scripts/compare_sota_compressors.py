@@ -123,8 +123,8 @@ def run_comparison():
 
     methods = [
         ("Uncompressed Baseline", lambda t: t),
-        ("Static Heuristic", static_heuristic_compress),
-        ("LLMLingua-style (Token Drop)", perplexity_style_drop),
+        ("Static Heuristic (Stopwords)", static_heuristic_compress),
+        ("Static Token-Level Pruning (LLMLingua Proxy)", perplexity_style_drop),
         ("Adaptive LinUCB (Our Method)", lambda t: compressor.compress(t)[0]),
     ]
 

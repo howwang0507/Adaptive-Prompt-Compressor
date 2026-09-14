@@ -123,18 +123,15 @@ class BaseLLMEnvironment:
             track_ast_failure()
             return False
 
-    def compress_prompt(self, text, arm):
-        """Compresses prompt text based on arm index:
-        - Arm 0: Conservative (Preserve exact original text, zero risk)
-        - Arm 1: Moderate (Whitespace normalization & mild cleanup)
-        - Arm 2: Aggressive (Stopword & filler token pruning)
-        """
-        if not text:
-            return ""
-        if arm == 0:
+    def _raw_compress_prompt(self, text, arm):
+        """Internal raw compression routines."""
+        if not text or arm == 0:
             return text
         if arm == 1:
-            return re.sub(r"\s+", " ", text).strip()
+            # Moderate: normalize multiple spaces within lines but preserve newline indentation
+            lines = text.split("\n")
+            cleaned_lines = [re.sub(r"[ \t]+", " ", line) if not line.startswith("    ") and not line.startswith("\t") else line for line in lines]
+            return "\n".join(cleaned_lines).strip()
         if arm == 2:
             # Multilingual check
             if any(ord(c) > 127 for c in text):
@@ -144,6 +141,21 @@ class BaseLLMEnvironment:
             kept_words = [w for w in words if w.lower() not in self.stop_words]
             return " ".join(kept_words) if kept_words else text
         return text
+
+    def compress_prompt(self, text, arm):
+        """Compresses prompt text with strict Structural & Constraint Guarding."""
+        if not text:
+            return ""
+        if arm == 0:
+            return text
+
+        from src.guards.structural_guard import StructuralConstraintGuard
+        compressed, is_valid, reason = StructuralConstraintGuard.compress_with_structural_guard(
+            prompt=text,
+            arm=arm,
+            base_compress_fn=self._raw_compress_prompt,
+        )
+        return compressed
 
 
 class RealLLMEnvironment(BaseLLMEnvironment):

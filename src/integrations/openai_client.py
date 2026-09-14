@@ -100,6 +100,7 @@ class _CompletionsWrapper:
         total_compressed_tokens = 0
         strategies_used = []
 
+        traces = []
         for msg in messages:
             role = msg.get("role", "")
             content = msg.get("content", "")
@@ -110,7 +111,7 @@ class _CompletionsWrapper:
             ):
                 orig_len = len(content)
                 orig_tokens = count_tokens_tiktoken(content, model=model_name)
-                comp_text, strategy, _ = self._parent.compressor.compress(content)
+                comp_text, strategy, meta = self._parent.compressor.compress(content)
                 comp_len = len(comp_text)
                 comp_tokens = count_tokens_tiktoken(comp_text, model=model_name)
 
@@ -119,6 +120,12 @@ class _CompletionsWrapper:
                 total_original_tokens += orig_tokens
                 total_compressed_tokens += comp_tokens
                 strategies_used.append(strategy)
+                traces.append({
+                    "arm": meta.get("arm", 0),
+                    "features": meta.get("features", []),
+                    "base_tokens": orig_tokens,
+                    "comp_tokens": comp_tokens,
+                })
 
                 compressed_messages.append({**msg, "content": comp_text})
             else:
@@ -150,6 +157,19 @@ class _CompletionsWrapper:
         price_per_m = MODEL_INPUT_PRICE_PER_M.get(model_name, 0.15)
         est_cost_savings_usd = (tokens_saved / 1_000_000.0) * price_per_m
 
+        # Method to report downstream task success/failure back to LinUCB
+        def report_task_feedback(task_success: bool, quality_score: float = 1.0):
+            """Updates LinUCB with constrained quality reward feedback."""
+            from src.utils import calculate_constrained_reward
+            for trace in traces:
+                r = calculate_constrained_reward(
+                    base_tokens=trace["base_tokens"],
+                    comp_tokens=trace["comp_tokens"],
+                    task_success=task_success,
+                    quality_score=quality_score,
+                )
+                self._parent.compressor.update_policy(trace["arm"], trace["features"], r)
+
         setattr(
             response,
             "compression_meta",
@@ -162,9 +182,12 @@ class _CompletionsWrapper:
                 "tokens_saved": tokens_saved,
                 "est_cost_savings_usd": round(est_cost_savings_usd, 7),
                 "model": model_name,
+                "traces": traces,
             },
         )
+        setattr(response, "report_feedback", report_task_feedback)
         return response
+
 
 
 def wrap_openai_client(

@@ -11,6 +11,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Reasoning Model Support**: Optimized compression routines for OpenAI `o1`, `o1-mini`, and `o3-mini`.
 - **Streaming Compression Middleware**: Chunked prompt preprocessing with zero impact on Time-To-First-Token (TTFT).
 
+## [1.4.0] - 2026-09-14
+
+### Added
+- **Block-Level Structural & Constraint Guard (`src/guards/structural_guard.py`)**:
+  - Python indentation and syntax isolation.
+  - Mandatory preservation of critical negation keywords (`not`, `never`, `不得`, `禁止`) and numerical constraint tokens.
+  - Automatic safe fallback to original prompt upon syntax or constraint degradation.
+- **Constrained Bandit Objective & Closed-Loop Feedback**:
+  - Lagrangian-penalized reward function `calculate_constrained_reward` in `src/utils.py`.
+  - Downstream accuracy reporting method `response.report_feedback()` in `src/integrations/openai_client.py`.
+- **Evidence-Preserving RAG Compressor (`src/rag/evidence_compressor.py`)**:
+  - Sentence-level query-relevance ranking and citation anchor preservation `[Doc 1]`.
+  - Character-safe multilingual sentence segmentation (Traditional & Simplified Chinese support).
+- **Comprehensive Economic Net Benefit Model (`src/economics/economic_model.py`)**:
+  - Multi-factor ROI evaluation accounting for token discounts, serverless CPU compute overhead, retry penalties, and latency percentiles (p50/p95).
+- **Academic Benchmark Rigor & Ground Truth Alignment**:
+  - Clarified benchmark scopes to accurately reflect code context AST preservation and proxy token pruning.
+
 ## [1.3.0] - 2026-09-14
 
 ### Added

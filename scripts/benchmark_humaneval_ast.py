@@ -1,10 +1,11 @@
 """
-HumanEval & Coding Benchmark Suite for Adaptive Prompt Compressor.
+HumanEval Code Context AST & Execution Preservation Benchmark.
 Evaluates:
-1. Token reduction across 10 representative programming tasks.
-2. Abstract Syntax Tree (AST) validation pass rate (SyntaxError detection).
-3. Routing latency (< 100 microseconds).
-4. Functional unit test execution on generated/compressed code functions.
+1. Token reduction on multi-turn code contexts, function docstrings, and reference solutions.
+2. Abstract Syntax Tree (AST) validation pass rate (zero syntax corruption).
+3. Microsecond-level routing latency (< 100 microseconds).
+4. Functional unit test execution pass rate on preserved function AST implementations.
+Note: Evaluates code context preservation fidelity rather than raw LLM generation pass@1.
 """
 
 import ast

@@ -44,6 +44,32 @@ def calculate_reward(
     return reward, saving_ratio, w_lat_pen, w_fail_pen
 
 
+def calculate_constrained_reward(
+    base_tokens: int,
+    comp_tokens: int,
+    task_success: bool,
+    quality_score: float = 1.0,
+    quality_tolerance: float = 0.90,
+    lambda_cost: float = 1.5,
+    lambda_lagrange: float = 5.0,
+) -> float:
+    """
+    Quality-Constrained Bandit Objective:
+    Minimize total task cost subject to quality degradation not exceeding tolerance.
+    Reward = lambda_cost * saving_ratio - lambda_lagrange * max(0, quality_tolerance - quality_score) - penalty_if_failed
+    """
+    saving_ratio = max(0.0, (base_tokens - comp_tokens) / max(base_tokens, 1))
+
+    if not task_success:
+        # Severe penalty for task failure (e.g. AST error, wrong answer)
+        return -3.0
+
+    # Constraint violation gap
+    violation = max(0.0, quality_tolerance - quality_score)
+    constrained_reward = (lambda_cost * saving_ratio) - (lambda_lagrange * violation)
+    return constrained_reward
+
+
 
 try:
     from sentence_transformers import SentenceTransformer
