@@ -1,36 +1,97 @@
 # Contributing to Adaptive Prompt Compressor
 
-First off, thank you for considering contributing! It's people like you that make the open-source community such a great place to learn, inspire, and create.
+Thank you for your interest in contributing to **Adaptive Prompt Compressor**! We welcome contributions from researchers, engineers, and developers across the open-source and AI communities.
 
-## 🛠️ Development Setup
+This guide provides guidelines and setup instructions to help you get started quickly and effectively.
 
-1. **Clone and Install**
-   ```bash
-   git clone https://github.com/howwang0507/Adaptive-Prompt-Compressor.git
-   cd Adaptive-Prompt-Compressor
-   uv sync --all-extras
-   ```
+---
 
-2. **Environment Variables**
-   Copy `.env.example` to `.env` and add your API keys.
+## 🧭 Code of Conduct
 
-3. **Coding Standards**
-   - Use `ruff` for linting.
-   - Use `black` for formatting.
-   - Follow Type Hinting for all new functions.
+All contributors and maintainers are expected to uphold our [Code of Conduct](CODE_OF_CONDUCT.md). Please report any unacceptable behavior to `howwang0507@example.com`.
 
-## 🧪 Testing
+---
 
-Run tests before submitting a PR:
+## 🛠️ Local Development Setup
+
+We use [`uv`](https://github.com/astral-sh/uv) as the fast package and project manager.
+
+### 1. Clone the Repository
 ```bash
-uv run pytest tests/
+git clone https://github.com/howwang0507/Adaptive-Prompt-Compressor.git
+cd Adaptive-Prompt-Compressor
 ```
 
-## 📝 Pull Request Process
+### 2. Install Dependencies
+Install all core and development dependencies in an isolated virtual environment:
+```bash
+uv sync --all-extras --dev
+```
 
-1. Ensure any install or build dependencies are removed before the end of the layer when doing a build.
-2. Update the README.md with details of changes to the interface, this includes new environment variables, exposed ports, useful file locations and container parameters.
-3. You may merge the Pull Request in once you have the sign-off of two other developers, or if you do not have permission to do that, you may request the second reviewer to merge it for you.
+### 3. Configure Environment Variables (Optional)
+If running live LLM benchmarks against OpenAI or Anthropic:
+```bash
+cp .env.example .env
+# Edit .env and supply your OPENAI_API_KEY
+```
+*(Note: Offline simulation tests do NOT require any external API keys.)*
+
+---
+
+## 🧪 Testing & Code Quality
+
+Before opening a pull request, ensure all linters and test suites pass locally:
+
+### 1. Linting & Formatting
+```bash
+# Check code style with Ruff
+uv run ruff check .
+
+# Optional formatting check
+uv run ruff format --check .
+```
+
+### 2. Run Test Suite
+```bash
+uv run pytest tests/ -v
+```
+
+### 3. Run Cookbooks / Examples
+Verify that the example scripts run without errors:
+```bash
+uv run python examples/basic_usage.py
+uv run python examples/openai_sdk_wrapper_demo.py
+uv run python examples/openai_tool_calling_compression.py
+```
+
+---
+
+## 🌿 Branching & Git Commit Guidelines
+
+We follow [Conventional Commits](https://www.conventionalcommits.org/):
+
+* `feat(...)`: A new feature or capability (e.g. `feat(integrations): add LangChain prompt compressor adapter`)
+* `fix(...)`: A bug fix (e.g. `fix(openai): handle empty tool call lists gracefully`)
+* `docs(...)`: Documentation changes or additions (e.g. `docs(readme): add cookbook architecture diagram`)
+* `test(...)`: Adding or refactoring unit/integration tests
+* `perf(...)`: Performance optimizations
+* `chore(...)`: Tooling, dependency, or packaging updates
+
+---
+
+## 📝 Pull Request Workflow
+
+1. **Fork and Branch**: Create a feature branch from `main`:
+   ```bash
+   git checkout -b feat/your-feature-name
+   ```
+2. **Make Changes**: Keep commits atomic and self-contained.
+3. **Write Tests**: Add unit tests in `tests/` covering new features or edge cases.
+4. **Submit PR**: Open a PR pointing to `main`. Fill in the PR template describing your motivation, implementation details, and verification steps.
+5. **Review**: Maintainers will review the code and CI status. Once approved, it will be merged into `main`!
+
+---
 
 ## ⚖️ License
-By contributing, you agree that your contributions will be licensed under its MIT License.
+
+By contributing code to Adaptive Prompt Compressor, you agree that your contributions are licensed under the [MIT License](LICENSE).

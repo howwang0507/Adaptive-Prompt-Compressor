@@ -193,13 +193,11 @@ uv run python -m src.cli "def calculate_statistics(data): ..."
 uv run python -m src.cli --benchmark
 ```
 
-### 3. Interactive Jupyter Notebook Showcase (Cookbook)
-
-Run the end-to-end interactive demo in Jupyter or Google Colab:
-```bash
-uv run jupyter notebook examples/openai_cookbook_showcase.ipynb
-```
-*Walks through LinUCB contextual routing across Code, Technical Documentation, and Conversational Chat, with live `tiktoken` accounting and USD cost telemetry.*
+### 3. Interactive Cookbooks & Case Studies
+- 📓 **Interactive Jupyter Notebook**: Run our [OpenAI Cookbook Showcase on Google Colab](https://colab.research.google.com/github/howwang0507/Adaptive-Prompt-Compressor/blob/main/examples/openai_cookbook_showcase.ipynb)
+- 🛠️ **Tool / Function Calling Compression**: [`examples/openai_tool_calling_compression.py`](examples/openai_tool_calling_compression.py) (preserves 100% parameter schema fidelity)
+- 📚 **Enterprise RAG Case Study**: [`examples/rag_end_to_end_case_study.py`](examples/rag_end_to_end_case_study.py) (LinUCB contextual compression across enterprise documents)
+- 🔌 **1-Line SDK Wrapper Demo**: [`examples/openai_sdk_wrapper_demo.py`](examples/openai_sdk_wrapper_demo.py)
 
 ### 4. Interactive Web Dashboard (Streamlit & Docker)
 

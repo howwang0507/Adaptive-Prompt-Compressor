@@ -1,0 +1,51 @@
+{
+  "overall_savings_pct": 0.0,
+  "avg_latency_us": 65.76,
+  "ast_pass_rate_pct": 100.0,
+  "results": [
+    {
+      "category": "Code Generation & Syntax",
+      "model": "gpt-4o",
+      "original_tokens": 134,
+      "compressed_tokens": 134,
+      "tokens_saved": 0,
+      "savings_pct": 0.0,
+      "strategy": "Conservative",
+      "latency_us": 115.2,
+      "ast_valid": true
+    },
+    {
+      "category": "RAG / Technical Documentation",
+      "model": "gpt-4o-mini",
+      "original_tokens": 63,
+      "compressed_tokens": 63,
+      "tokens_saved": 0,
+      "savings_pct": 0.0,
+      "strategy": "Conservative",
+      "latency_us": 58.9,
+      "ast_valid": true
+    },
+    {
+      "category": "Conversational Chat & Support",
+      "model": "gpt-4o-mini",
+      "original_tokens": 65,
+      "compressed_tokens": 65,
+      "tokens_saved": 0,
+      "savings_pct": 0.0,
+      "strategy": "Conservative",
+      "latency_us": 47.1,
+      "ast_valid": true
+    },
+    {
+      "category": "System Instructions & Few-Shot Prompts",
+      "model": "gpt-4o",
+      "original_tokens": 64,
+      "compressed_tokens": 64,
+      "tokens_saved": 0,
+      "savings_pct": 0.0,
+      "strategy": "Conservative",
+      "latency_us": 41.7,
+      "ast_valid": true
+    }
+  ]
+}

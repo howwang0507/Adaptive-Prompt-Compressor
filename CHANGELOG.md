@@ -12,6 +12,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **OpenAI Prompt Cache Prefix Alignment**: Preserve exact prompt prefix boundaries to stack LinUCB compression with OpenAI's 50% prompt caching discount.
 - **Reasoning Model Support**: Optimized compression routines for OpenAI `o1`, `o1-mini`, and `o3-mini`.
 
+## [1.1.2] - 2026-09-14
+
+### Added
+- **Tool / Function Calling Compression Cookbook**:
+  - Added `examples/openai_tool_calling_compression.py` demonstrating zero-degradation system prompt compression with schema verification during tool usage.
+- **Enhanced Open-Source Contributing Guidelines**:
+  - Rewrote and enriched `CONTRIBUTING.md` with Conventional Commits, branch workflows, and developer quality checks.
+- **Benchmark Artifacts Management**:
+  - Structured empirical benchmark outputs into `benchmarks/results/`.
+
 ## [1.1.0] - 2026-09-12
 
 ### Added
