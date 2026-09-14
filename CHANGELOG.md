@@ -11,6 +11,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Reasoning Model Support**: Optimized compression routines for OpenAI `o1`, `o1-mini`, and `o3-mini`.
 - **Streaming Compression Middleware**: Chunked prompt preprocessing with zero impact on Time-To-First-Token (TTFT).
 
+## [1.3.0] - 2026-09-14
+
+### Added
+- **OpenAI-Compatible Reverse Proxy Gateway (`src/proxy/server.py`)**:
+  - Transparent interceptor allowing any framework or language (cURL, Go, TypeScript) to use compression by setting `OPENAI_BASE_URL`.
+- **LlamaIndex Adaptive NodePostprocessor (`src/integrations/llama_index_postprocessor.py`)**:
+  - Pluggable postprocessor dynamically compressing retrieved text nodes in RAG synthesis.
+- **GSM8K Reasoning & Mathematical Entity Preservation Benchmark (`benchmarks/eval_gsm8k.py`)**:
+  - Validated 100% entity fidelity and numerical consistency under LinUCB contextual compression.
+- **Technical Whitepaper & Formal Architecture Specification (`docs/WHITE_PAPER.md`)**:
+  - Full formulation covering Sherman-Morrison rank-1 updates, regret bounds, and double-cost-reduction analysis.
+- **GitHub Profile Showcase Hub (`profile/README.md`)**:
+  - Personalized profile documentation highlighting architecture achievements.
+- **Automated Ecosystem Tests (`tests/test_v13_ecosystem.py`)**:
+  - Full coverage for proxy gateway and LlamaIndex adapters.
+
 ## [1.2.0] - 2026-09-14
 
 ### Added

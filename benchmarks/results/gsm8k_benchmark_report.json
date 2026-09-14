@@ -1,0 +1,48 @@
+{
+  "timestamp": 1789363901.0544682,
+  "benchmark": "GSM8K Mathematical Reasoning & Entity Preservation",
+  "overall_token_savings_pct": 0.0,
+  "mathematical_fidelity_pct": 100.0,
+  "items": [
+    {
+      "id": "gsm8k-01",
+      "strategy": "Conservative",
+      "orig_tokens": 31,
+      "comp_tokens": 31,
+      "savings_pct": 0.0,
+      "entity_fidelity_pct": 100.0
+    },
+    {
+      "id": "gsm8k-02",
+      "strategy": "Conservative",
+      "orig_tokens": 20,
+      "comp_tokens": 20,
+      "savings_pct": 0.0,
+      "entity_fidelity_pct": 100.0
+    },
+    {
+      "id": "gsm8k-03",
+      "strategy": "Conservative",
+      "orig_tokens": 50,
+      "comp_tokens": 50,
+      "savings_pct": 0.0,
+      "entity_fidelity_pct": 100.0
+    },
+    {
+      "id": "gsm8k-04",
+      "strategy": "Conservative",
+      "orig_tokens": 47,
+      "comp_tokens": 47,
+      "savings_pct": 0.0,
+      "entity_fidelity_pct": 100.0
+    },
+    {
+      "id": "gsm8k-05",
+      "strategy": "Conservative",
+      "orig_tokens": 46,
+      "comp_tokens": 46,
+      "savings_pct": 0.0,
+      "entity_fidelity_pct": 100.0
+    }
+  ]
+}

@@ -29,6 +29,18 @@ This document outlines the strategic engineering roadmap for **Adaptive-Prompt-C
 - [x] **High-Throughput Batch Processing**:
   - `AsyncLinUCBCompressor` batch processing support via `compress_batch` with demonstration cookbook in `examples/async_batch_compression_demo.py`.
 
+### ✅ v1.3.0 — Ecosystem Hub, Proxy Gateway & Rigorous Whitepaper (Completed)
+- [x] **OpenAI-Compatible Reverse Proxy Gateway (`src/proxy/server.py`)**:
+  - Universal language-agnostic drop-in gateway compatible with cURL, TypeScript, Python, and Go via `OPENAI_BASE_URL`.
+- [x] **LlamaIndex Adaptive Contextual Postprocessor (`src/integrations/llama_index_postprocessor.py`)**:
+  - Seamless integration into RAG synthesis pipelines.
+- [x] **GSM8K Mathematical Reasoning Preservation Benchmark (`benchmarks/eval_gsm8k.py`)**:
+  - Validated 100% numerical fidelity and zero formula corruption across mathematical prompts.
+- [x] **Technical Whitepaper & System Architecture Report (`docs/WHITE_PAPER.md`)**:
+  - Formal mathematical formulation (Sherman-Morrison updates, Regret Bound, Double Cost Reduction).
+- [x] **GitHub Profile Developer Hub (`profile/README.md`)**:
+  - Modernized developer profile and repository showcase.
+
 ### 🚀 v2.0.0 — Reasoning Models & Distributed Parameter Sync (Q4 2026)
 - [ ] **Reasoning Models Adaptation (`o1` / `o3-mini`)**:
   - Contextual policy tuning specifically adapted for reasoning-heavy prompts.

@@ -194,7 +194,11 @@ uv run python -m src.cli --benchmark
 ```
 
 ### 3. Interactive Cookbooks & Case Studies
+[![Technical Whitepaper](https://img.shields.io/badge/Architecture-Whitepaper%20PDF-red?logo=googledocs)](docs/WHITE_PAPER.md)
 - 📓 **Interactive Jupyter Notebook**: Run our [OpenAI Cookbook Showcase on Google Colab](https://colab.research.google.com/github/howwang0507/Adaptive-Prompt-Compressor/blob/main/examples/openai_cookbook_showcase.ipynb)
+- 📄 **Technical Whitepaper**: Read the full mathematical formulation in [`docs/WHITE_PAPER.md`](docs/WHITE_PAPER.md)
+- 🌐 **Language-Agnostic Proxy Gateway**: [`src/proxy/server.py`](src/proxy/server.py) (Drop-in support for any language via `OPENAI_BASE_URL`)
+- 🦙 **LlamaIndex Adaptive Postprocessor**: [`src/integrations/llama_index_postprocessor.py`](src/integrations/llama_index_postprocessor.py) (Compress retrieved nodes in RAG)
 - 🛡️ **Structured Outputs & Prompt Caching**: [`examples/openai_structured_outputs_and_caching_demo.py`](examples/openai_structured_outputs_and_caching_demo.py) (preserves JSON schema integrity & aligns 50% OpenAI prompt cache)
 - ⚡ **High-Throughput Async Batching**: [`examples/async_batch_compression_demo.py`](examples/async_batch_compression_demo.py) (concurrent asyncio batch compression for high-volume pipelines)
 - 🛠️ **Tool / Function Calling Compression**: [`examples/openai_tool_calling_compression.py`](examples/openai_tool_calling_compression.py) (preserves 100% parameter schema fidelity)
